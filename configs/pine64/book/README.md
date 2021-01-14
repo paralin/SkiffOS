@@ -6,9 +6,10 @@ for the Pine64 PineBook.
 References: 
 
  - https://linux-sunxi.org/Pine_Pinebook
- - https://wiki.pine64.org/index.php/Pinebook
  - https://wiki.pine64.org/index.php/Pinebook_Pro
  - https://github.com/samueldr/wip-pinebook-pro
+ - https://gitlab.manjaro.org/manjaro-arm/packages/core/linux
+ - https://github.com/Jannik2099/pinebookpro-overlay
 
 ## Getting Started
 
@@ -43,6 +44,21 @@ the internal emmc, if found containing a valid u-boot flash.
 
 Add `core/nixos_xfce` to SKIFF_CONFIG to enable "Skiff Core" with XFCE Desktop
 configured.
+
+## Gentoo on Pinebook
+
+A Gentoo-based KDE image optimized for the PineBook Pro has been prepared.
+
+To use it, enable `core/gentoo`, and then on first boot ssh to the device:
+
+```sh
+systemctl stop skiff-core
+docker pull skiffos/skiff-core-gentoo:pinebook
+docker tag skiffos/skiff-core-gentoo:pinebook skiffos/skiff-core-gentoo:latest
+docker rm -f core # delete if exists
+systemctl start skiff-core
+su - core
+```
 
 ## Known Issues
 

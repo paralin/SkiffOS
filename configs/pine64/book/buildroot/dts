@@ -1,0 +1,1 @@
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="rockchip/rk3399-pinebook-pro"

@@ -1,9 +1,10 @@
 # 5.9.0-1145-ayufan
-BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
-BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="https://github.com/ayufan-rock64/linux-mainline-kernel/archive/06dd9f4106b4a721f5c08ef4eb89b16ac8de9a86/linux-rock64-5.9.0-1145-ayufan.tar.gz"
+# BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
+# BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="https://github.com/ayufan-rock64/linux-mainline-kernel/archive/06dd9f4106b4a721f5c08ef4eb89b16ac8de9a86/linux-rock64-5.9.0-1145-ayufan.tar.gz"
+# BR2_KERNEL_HEADERS_AS_KERNEL=y
+# BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_5_9=y
+# BR2_LINUX_KERNEL_DEFCONFIG="rockchip_linux"
 
-BR2_KERNEL_HEADERS_AS_KERNEL=y
-BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_5_9=y
-
-BR2_LINUX_KERNEL_DEFCONFIG="rockchip_linux"
-BR2_LINUX_KERNEL_INTREE_DTS_NAME="rockchip/rk3399-pinebook-pro"
+# Mainline (5.10.x) with MANJARO patches: inherit configs-base/pre kernel.
+# uses kernel_patches and kernel/manjaro configuration.
+BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG=y

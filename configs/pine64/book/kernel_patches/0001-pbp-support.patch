@@ -1,0 +1,275 @@
+From 301c04b78a35209e81091d6625e9ca8ddfbc581a Mon Sep 17 00:00:00 2001
+From: Dan Johansen <strit@manjaro.org>
+Date: Tue, 10 Nov 2020 16:00:47 +0100
+Subject: [PATCH] pbp-support
+
+This patch includes the following:
+Pinebook Pro DTS fixes
+rk3399 USB-C fixes
+Pinebook Pro audio fix
+
+Signed-off-by: Dan Johansen <strit@manjaro.org>
+---
+ .../boot/dts/rockchip/rk3399-pinebook-pro.dts | 16 ++++++
+ drivers/phy/rockchip/phy-rockchip-typec.c     | 17 ++++++
+ drivers/usb/typec/altmodes/displayport.c      | 55 ++++++++++++++++++-
+ drivers/usb/typec/bus.c                       | 10 +++-
+ sound/soc/codecs/es8316.c                     |  2 +-
+ sound/soc/soc-jack.c                          |  5 +-
+ 6 files changed, 98 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399-pinebook-pro.dts b/arch/arm64/boot/dts/rockchip/rk3399-pinebook-pro.dts
+index 06d48338c836..ef0792f2f901 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399-pinebook-pro.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3399-pinebook-pro.dts
+@@ -22,6 +22,11 @@ chosen {
+ 		stdout-path = "serial2:1500000n8";
+ 	};
+ 
++	memory {
++		device_type = "memory";
++		reg = <0x0 0x00200000 0x0 0xf7e00000>;
++	};
++
+ 	backlight: edp-backlight {
+ 		compatible = "pwm-backlight";
+ 		power-supply = <&vcc_12v>;
+@@ -132,6 +137,12 @@ sdio_pwrseq: sdio-pwrseq {
+ 		reset-gpios = <&gpio0 RK_PB2 GPIO_ACTIVE_LOW>;
+ 	};
+ 
++	/* first 128k(0xff8d0000~0xff8f0000) for ddr and ATF */
++	sram@ff8d0000 {
++		compatible = "mmio-sram";
++		reg = <0x0 0xff8d0000 0x0 0x20000>; /* 128k */
++	};
++
+ 	/* Audio components */
+ 	es8316-sound {
+ 		compatible = "simple-audio-card";
+@@ -381,6 +392,7 @@ mains_charger: dc-charger {
+ 
+ &cdn_dp {
+ 	status = "okay";
++	extcon = <&fusb0>;
+ };
+ 
+ &cpu_b0 {
+@@ -715,6 +727,9 @@ connector {
+ 				<PDO_FIXED(5000, 1400, PDO_FIXED_USB_COMM)>;
+ 			try-power-role = "sink";
+ 
++			extcon-cables = <1 2 5 6 9 10 12 44>;
++			typec-altmodes = <0xff01 1 0x001c0c00 1>;
++
+ 			ports {
+ 				#address-cells = <1>;
+ 				#size-cells = <0>;
+@@ -982,6 +997,7 @@ spiflash: flash@0 {
+ };
+ 
+ &tcphy0 {
++	extcon = <&fusb0>;
+ 	status = "okay";
+ };
+ 
+diff --git a/drivers/phy/rockchip/phy-rockchip-typec.c b/drivers/phy/rockchip/phy-rockchip-typec.c
+index 70a31251b202..5385bb4f0bd4 100644
+--- a/drivers/phy/rockchip/phy-rockchip-typec.c
++++ b/drivers/phy/rockchip/phy-rockchip-typec.c
+@@ -40,6 +40,7 @@
+ #include <linux/clk-provider.h>
+ #include <linux/delay.h>
+ #include <linux/extcon.h>
++#include <linux/extcon-provider.h>
+ #include <linux/io.h>
+ #include <linux/iopoll.h>
+ #include <linux/kernel.h>
+@@ -1160,6 +1161,22 @@ static int rockchip_typec_phy_probe(struct platform_device *pdev)
+ 				dev_err(dev, "Invalid or missing extcon\n");
+ 			return PTR_ERR(tcphy->extcon);
+ 		}
++	} else {
++		extcon_set_property_capability(tcphy->extcon, EXTCON_USB,
++					       EXTCON_PROP_USB_SS);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_USB_HOST,
++					       EXTCON_PROP_USB_SS);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_DISP_DP,
++					       EXTCON_PROP_USB_SS);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_USB,
++					       EXTCON_PROP_USB_TYPEC_POLARITY);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_USB_HOST,
++					       EXTCON_PROP_USB_TYPEC_POLARITY);
++		extcon_set_property_capability(tcphy->extcon, EXTCON_DISP_DP,
++					       EXTCON_PROP_USB_TYPEC_POLARITY);
++		extcon_sync(tcphy->extcon, EXTCON_USB);
++		extcon_sync(tcphy->extcon, EXTCON_USB_HOST);
++		extcon_sync(tcphy->extcon, EXTCON_DISP_DP);
+ 	}
+ 
+ 	pm_runtime_enable(dev);
+diff --git a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmodes/displayport.c
+index e62e5e3da01e..a3d03db476aa 100644
+--- a/drivers/usb/typec/altmodes/displayport.c
++++ b/drivers/usb/typec/altmodes/displayport.c
+@@ -9,6 +9,8 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/extcon.h>
++#include <linux/extcon-provider.h>
+ #include <linux/mutex.h>
+ #include <linux/module.h>
+ #include <linux/usb/pd_vdo.h>
+@@ -135,15 +137,53 @@ static int dp_altmode_status_update(struct dp_altmode *dp)
+ 	return ret;
+ }
+ 
++static void dp_altmode_update_extcon(struct dp_altmode *dp, bool disconnect) {
++	const struct device *dev = &dp->port->dev;
++	struct extcon_dev* edev = NULL;
++
++	while (dev) {
++		edev = extcon_find_edev_by_node(dev->of_node);
++		if(!IS_ERR(edev)) {
++			break;
++		}
++		dev = dev->parent;
++	}
++
++	if (IS_ERR_OR_NULL(edev)) {
++		return;
++	}
++
++	if (disconnect || !dp->data.conf) {
++		extcon_set_state_sync(edev, EXTCON_DISP_DP, false);
++	} else {
++		union extcon_property_value extcon_true = { .intval = true };
++		extcon_set_state(edev, EXTCON_DISP_DP, true);
++		if (DP_CONF_GET_PIN_ASSIGN(dp->data.conf) & DP_PIN_ASSIGN_MULTI_FUNC_MASK) {
++			extcon_set_state_sync(edev, EXTCON_USB_HOST, true);
++			extcon_set_property(edev, EXTCON_DISP_DP, EXTCON_PROP_USB_SS,
++						 extcon_true);
++		} else {
++			extcon_set_state_sync(edev, EXTCON_USB_HOST, false);
++		}
++		extcon_sync(edev, EXTCON_DISP_DP);
++		extcon_set_state_sync(edev, EXTCON_USB, false);
++	}
++
++}
++
+ static int dp_altmode_configured(struct dp_altmode *dp)
+ {
+ 	int ret;
+ 
+ 	sysfs_notify(&dp->alt->dev.kobj, "displayport", "configuration");
+ 
+-	if (!dp->data.conf)
++	if (!dp->data.conf) {
++		dp_altmode_update_extcon(dp, true);
+ 		return typec_altmode_notify(dp->alt, TYPEC_STATE_USB,
+ 					    &dp->data);
++	}
++
++	dp_altmode_update_extcon(dp, false);
+ 
+ 	ret = dp_altmode_notify(dp);
+ 	if (ret)
+@@ -170,9 +210,11 @@ static int dp_altmode_configure_vdm(struct dp_altmode *dp, u32 conf)
+ 	if (ret) {
+ 		if (DP_CONF_GET_PIN_ASSIGN(dp->data.conf))
+ 			dp_altmode_notify(dp);
+-		else
++		else {
++			dp_altmode_update_extcon(dp, true);
+ 			typec_altmode_notify(dp->alt, TYPEC_STATE_USB,
+ 					     &dp->data);
++		}
+ 	}
+ 
+ 	return ret;
+@@ -211,6 +253,8 @@ static void dp_altmode_work(struct work_struct *work)
+ 	case DP_STATE_EXIT:
+ 		if (typec_altmode_exit(dp->alt))
+ 			dev_err(&dp->alt->dev, "Exit Mode Failed!\n");
++		else
++			dp_altmode_update_extcon(dp, true);
+ 		break;
+ 	default:
+ 		break;
+@@ -521,8 +565,13 @@ int dp_altmode_probe(struct typec_altmode *alt)
+ 	if (!(DP_CAP_DFP_D_PIN_ASSIGN(port->vdo) &
+ 	      DP_CAP_UFP_D_PIN_ASSIGN(alt->vdo)) &&
+ 	    !(DP_CAP_UFP_D_PIN_ASSIGN(port->vdo) &
+-	      DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo)))
++	      DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo))) {
++		dev_err(&alt->dev, "No compatible pin configuration found:"\
++			"%04lx -> %04lx, %04lx <- %04lx",
++			DP_CAP_DFP_D_PIN_ASSIGN(port->vdo), DP_CAP_UFP_D_PIN_ASSIGN(alt->vdo),
++			DP_CAP_UFP_D_PIN_ASSIGN(port->vdo), DP_CAP_DFP_D_PIN_ASSIGN(alt->vdo));
+ 		return -ENODEV;
++	}
+ 
+ 	ret = sysfs_create_group(&alt->dev.kobj, &dp_altmode_group);
+ 	if (ret)
+diff --git a/drivers/usb/typec/bus.c b/drivers/usb/typec/bus.c
+index e8ddb81cb6df..61300c9f2a26 100644
+--- a/drivers/usb/typec/bus.c
++++ b/drivers/usb/typec/bus.c
+@@ -154,8 +154,14 @@ EXPORT_SYMBOL_GPL(typec_altmode_exit);
+  */
+ void typec_altmode_attention(struct typec_altmode *adev, u32 vdo)
+ {
+-	struct typec_altmode *pdev = &to_altmode(adev)->partner->adev;
+-
++	struct typec_altmode *pdev;
++	WARN_ONCE(!adev, "typec bus attention: adev is NULL!");
++	WARN_ONCE(!to_altmode(adev)->partner, "typec bus attention: partner is NULL!");
++	if(!adev || !to_altmode(adev)->partner) {
++		return;
++	}
++ 
++	pdev = &to_altmode(adev)->partner->adev;
+ 	if (pdev->ops && pdev->ops->attention)
+ 		pdev->ops->attention(pdev, vdo);
+ }
+diff --git a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
+index bd5d230c5df2..a2d8bf620b6f 100644
+--- a/sound/soc/codecs/es8316.c
++++ b/sound/soc/codecs/es8316.c
+@@ -688,7 +688,7 @@ static void es8316_disable_jack_detect(struct snd_soc_component *component)
+ 	snd_soc_component_update_bits(component, ES8316_GPIO_DEBOUNCE,
+ 				      ES8316_GPIO_ENABLE_INTERRUPT, 0);
+ 
+-	if (es8316->jack->status & SND_JACK_MICROPHONE) {
++	if (es8316->jack && (es8316->jack->status & SND_JACK_MICROPHONE)) {
+ 		es8316_disable_micbias_for_mic_gnd_short_detect(component);
+ 		snd_soc_jack_report(es8316->jack, 0, SND_JACK_BTN_0);
+ 	}
+diff --git a/sound/soc/soc-jack.c b/sound/soc/soc-jack.c
+index 0f1820f36b4d..3d84f252d802 100644
+--- a/sound/soc/soc-jack.c
++++ b/sound/soc/soc-jack.c
+@@ -346,6 +346,9 @@ int snd_soc_jack_add_gpios(struct snd_soc_jack *jack, int count,
+ 				goto undo;
+ 			}
+ 		} else {
++			int flags = GPIOF_IN;
++			if (gpios[i].invert)
++				flags |= GPIOF_ACTIVE_LOW;
+ 			/* legacy GPIO number */
+ 			if (!gpio_is_valid(gpios[i].gpio)) {
+ 				dev_err(jack->card->dev,
+@@ -355,7 +358,7 @@ int snd_soc_jack_add_gpios(struct snd_soc_jack *jack, int count,
+ 				goto undo;
+ 			}
+ 
+-			ret = gpio_request_one(gpios[i].gpio, GPIOF_IN,
++			ret = gpio_request_one(gpios[i].gpio, flags,
+ 					       gpios[i].name);
+ 			if (ret)
+ 				goto undo;
+-- 
+2.28.0
+

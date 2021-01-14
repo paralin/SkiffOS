@@ -1,0 +1,58 @@
+From 3fcfe664c920ad12b2bc0b7438cba2d9fd72fe3a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Kamil=20Trzci=C5=84ski?= <ayufan@ayufan.eu>
+Date: Sun, 18 Oct 2020 21:36:47 +0200
+Subject: [PATCH] ayufan: typec: displayport: some devices have
+ `pin-assignments` reversed
+
+---
+ drivers/usb/typec/altmodes/displayport.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/usb/typec/altmodes/displayport.c b/drivers/usb/typec/altmodes/displayport.c
+index a3d03db476aa..69cbb8ab408b 100644
+--- a/drivers/usb/typec/altmodes/displayport.c
++++ b/drivers/usb/typec/altmodes/displayport.c
+@@ -92,6 +92,12 @@ static int dp_altmode_configure(struct dp_altmode *dp, u8 con)
+ 		conf |= DP_CONF_UFP_U_AS_UFP_D;
+ 		pin_assign = DP_CAP_DFP_D_PIN_ASSIGN(dp->alt->vdo) &
+ 			     DP_CAP_UFP_D_PIN_ASSIGN(dp->port->vdo);
++
++		// Some devices have assignments reversed
++		if (!pin_assign) {
++			pin_assign = DP_CAP_UFP_D_PIN_ASSIGN(dp->alt->vdo) &
++			     DP_CAP_DFP_D_PIN_ASSIGN(dp->port->vdo);
++		}
+ 		break;
+ 	default:
+ 		break;
+@@ -479,10 +485,11 @@ pin_assignment_store(struct device *dev, struct device_attribute *attr,
+ 		goto out_unlock;
+ 	}
+ 
++	// Some devices have pin assignments reversed
+ 	if (DP_CONF_CURRENTLY(dp->data.conf) == DP_CONF_DFP_D)
+-		assignments = DP_CAP_UFP_D_PIN_ASSIGN(dp->alt->vdo);
++		assignments = DP_CAP_UFP_D_PIN_ASSIGN(dp->alt->vdo) || DP_CAP_DFP_D_PIN_ASSIGN(dp->alt->vdo);
+ 	else
+-		assignments = DP_CAP_DFP_D_PIN_ASSIGN(dp->alt->vdo);
++		assignments = DP_CAP_DFP_D_PIN_ASSIGN(dp->alt->vdo) || DP_CAP_UFP_D_PIN_ASSIGN(dp->alt->vdo);
+ 
+ 	if (!(DP_CONF_GET_PIN_ASSIGN(conf) & assignments)) {
+ 		ret = -EINVAL;
+@@ -519,10 +526,11 @@ static ssize_t pin_assignment_show(struct device *dev,
+ 
+ 	cur = get_count_order(DP_CONF_GET_PIN_ASSIGN(dp->data.conf));
+ 
++	// Some devices have pin assignments reversed
+ 	if (DP_CONF_CURRENTLY(dp->data.conf) == DP_CONF_DFP_D)
+-		assignments = DP_CAP_UFP_D_PIN_ASSIGN(dp->alt->vdo);
++		assignments = DP_CAP_UFP_D_PIN_ASSIGN(dp->alt->vdo) || DP_CAP_DFP_D_PIN_ASSIGN(dp->alt->vdo);
+ 	else
+-		assignments = DP_CAP_DFP_D_PIN_ASSIGN(dp->alt->vdo);
++		assignments = DP_CAP_DFP_D_PIN_ASSIGN(dp->alt->vdo) || DP_CAP_UFP_D_PIN_ASSIGN(dp->alt->vdo);
+ 
+ 	for (i = 0; assignments; assignments >>= 1, i++) {
+ 		if (assignments & 1) {
+-- 
+2.28.0
+
