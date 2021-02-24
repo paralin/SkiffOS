@@ -1,0 +1,496 @@
+diff -ruN libopenssl-1.1.1f_ori/crypto/aes/aes_core.c libopenssl-1.1.1f/crypto/aes/aes_core.c
+--- libopenssl-1.1.1f_ori/crypto/aes/aes_core.c	2020-03-31 14:17:45.000000000 +0200
++++ libopenssl-1.1.1f/crypto/aes/aes_core.c	2020-11-11 13:16:21.010169000 +0100
+@@ -43,6 +43,13 @@
+ #include <openssl/aes.h>
+ #include "aes_local.h"
+ 
++
++
++#ifdef VEXRISCV_AES
++#include <byteswap.h>
++#include "aes_custom.h"
++#endif
++
+ #if defined(OPENSSL_AES_CONST_TIME) && !defined(AES_ASM)
+ typedef union {
+     unsigned char b[8];
+@@ -668,6 +675,9 @@
+             rk[6] = rk[2] ^ rk[5];
+             rk[7] = rk[3] ^ rk[6];
+             if (++i == 10) {
++                #ifdef VEXRISCV_AES
++                vexriscv_aes_swap_key(key->rd_key);
++                #endif
+                 return 0;
+             }
+             rk += 4;
+@@ -688,6 +698,9 @@
+             rk[ 8] = rk[ 2] ^ rk[ 7];
+             rk[ 9] = rk[ 3] ^ rk[ 8];
+             if (++i == 8) {
++                #ifdef VEXRISCV_AES
++                vexriscv_aes_swap_key(key->rd_key);
++                #endif
+                 return 0;
+             }
+             rk[10] = rk[ 4] ^ rk[ 9];
+@@ -710,6 +723,9 @@
+             rk[10] = rk[ 2] ^ rk[ 9];
+             rk[11] = rk[ 3] ^ rk[10];
+             if (++i == 7) {
++                #ifdef VEXRISCV_AES
++                vexriscv_aes_swap_key(key->rd_key);
++                #endif
+                 return 0;
+             }
+             temp = rk[11];
+@@ -744,6 +760,9 @@
+     if (status < 0)
+         return status;
+ 
++    #ifdef VEXRISCV_AES
++    vexriscv_aes_swap_key(key->rd_key);
++    #endif
+     rk = key->rd_key;
+ 
+     /* invert the order of the round keys: */
+@@ -777,6 +796,9 @@
+             Td2[Te1[(rk[3] >>  8) & 0xff] & 0xff] ^
+             Td3[Te1[(rk[3]      ) & 0xff] & 0xff];
+     }
++    #ifdef VEXRISCV_AES
++    vexriscv_aes_swap_key(key->rd_key);
++    #endif
+     return 0;
+ }
+ 
+@@ -788,7 +810,11 @@
+                  const AES_KEY *key) {
+ 
+     const u32 *rk;
++#ifndef VEXRISCV_AES
+     u32 s0, s1, s2, s3, t0, t1, t2, t3;
++#endif
++
++
+ #ifndef FULL_UNROLL
+     int r;
+ #endif /* ?FULL_UNROLL */
+@@ -796,6 +822,10 @@
+     assert(in && out && key);
+     rk = key->rd_key;
+ 
++
++#ifdef VEXRISCV_AES
++    vexriscv_aes_encrypt(in, out, rk, key->rounds);
++#else
+     /*
+      * map byte array block to cipher state
+      * and add initial round key:
+@@ -969,6 +999,7 @@
+         (Te1[(t2      ) & 0xff] & 0x000000ff) ^
+         rk[3];
+     PUTU32(out + 12, s3);
++#endif
+ }
+ 
+ /*
+@@ -980,7 +1011,9 @@
+ {
+ 
+     const u32 *rk;
++#ifndef VEXRISCV_AES
+     u32 s0, s1, s2, s3, t0, t1, t2, t3;
++#endif
+ #ifndef FULL_UNROLL
+     int r;
+ #endif /* ?FULL_UNROLL */
+@@ -988,6 +1021,9 @@
+     assert(in && out && key);
+     rk = key->rd_key;
+ 
++#ifdef VEXRISCV_AES
++    vexriscv_aes_decrypt(in, out, rk, key->rounds);
++#else
+     /*
+      * map byte array block to cipher state
+      * and add initial round key:
+@@ -1161,6 +1197,7 @@
+         ((u32)Td4[(t0      ) & 0xff])       ^
+         rk[3];
+     PUTU32(out + 12, s3);
++#endif
+ }
+ 
+ #else /* AES_ASM */
+diff -ruN libopenssl-1.1.1f_ori/crypto/aes/aes_custom.h libopenssl-1.1.1f/crypto/aes/aes_custom.h
+--- libopenssl-1.1.1f_ori/crypto/aes/aes_custom.h	1970-01-01 01:00:00.000000000 +0100
++++ libopenssl-1.1.1f/crypto/aes/aes_custom.h	2020-11-12 12:35:49.039497000 +0100
+@@ -0,0 +1,279 @@
++#pragma once
++
++#include "riscv.h"
++
++#define aes_enc_round(rs1, rs2, sel) opcode_R(CUSTOM0, 0x00, (sel << 3), rs1, rs2)
++#define aes_enc_round_last(rs1, rs2, sel) opcode_R(CUSTOM0, 0x00, (sel << 3) | 2, rs1, rs2)
++
++#define aes_dec_round(rs1, rs2, sel) opcode_R(CUSTOM0, 0x00, (sel << 3) | 1, rs1, rs2)
++#define aes_dec_round_last(rs1, rs2, sel) opcode_R(CUSTOM0, 0x00, (sel << 3) | 2 | 1, rs1, rs2)
++
++
++static void vexriscv_aes_swap_key(unsigned int *key){
++    for(int i = 0;i < 60;i++){
++       key[i] = __bswap_32(key[i]);
++    }
++}
++
++static inline __attribute__((always_inline)) unsigned int  vexriscv_aes_load_unaligned(const unsigned char *ptr)   {
++    return ((unsigned int)ptr[0] << 0) | ((unsigned int)ptr[1] << 8) | ((unsigned int)ptr[2] << 16) | ((unsigned int)ptr[3] << 24);
++}
++
++static inline __attribute__((always_inline)) void vexriscv_aes_store_unaligned(unsigned char *ptr, unsigned int value) {
++    ptr[0] = value >> 0;
++    ptr[1] = value >> 8;
++    ptr[2] = value >> 16;
++    ptr[3] = value >> 24;
++}
++
++static inline __attribute__((always_inline)) void vexriscv_aes_encrypt(unsigned char *in,
++                          unsigned char *out,
++                          unsigned int *rk,
++                          int round_count) {
++    unsigned int s0, s1, s2, s3, t0, t1, t2, t3;
++    round_count >>= 1;
++
++    if(((int)in & 3) == 0){
++        s0 = ((volatile unsigned int*)in)[0];
++        s1 = ((volatile unsigned int*)in)[1];
++        s2 = ((volatile unsigned int*)in)[2];
++        s3 = ((volatile unsigned int*)in)[3];
++    } else {
++        s0 = vexriscv_aes_load_unaligned(in + 0);
++        s1 = vexriscv_aes_load_unaligned(in + 4);
++        s2 = vexriscv_aes_load_unaligned(in + 8);
++        s3 = vexriscv_aes_load_unaligned(in + 12);
++    }
++
++    t0 = ((volatile unsigned int*)rk)[0];
++    t1 = ((volatile unsigned int*)rk)[1];
++    t2 = ((volatile unsigned int*)rk)[2];
++    t3 = ((volatile unsigned int*)rk)[3];
++
++    s0 ^= t0;
++    s1 ^= t1;
++    s2 ^= t2;
++    s3 ^= t3;
++
++    for (;;) {
++        t0 = ((volatile unsigned int*)rk)[4];
++        t1 = ((volatile unsigned int*)rk)[5];
++        t2 = ((volatile unsigned int*)rk)[6];
++        t3 = ((volatile unsigned int*)rk)[7];
++
++
++        t0 = aes_enc_round(t0, s0, 0);
++        t1 = aes_enc_round(t1, s1, 0);
++        t2 = aes_enc_round(t2, s2, 0);
++        t3 = aes_enc_round(t3, s3, 0);
++
++        t0 = aes_enc_round(t0, s1, 1);
++        t1 = aes_enc_round(t1, s2, 1);
++        t2 = aes_enc_round(t2, s3, 1);
++        t3 = aes_enc_round(t3, s0, 1);
++
++        t0 = aes_enc_round(t0, s2, 2);
++        t1 = aes_enc_round(t1, s3, 2);
++        t2 = aes_enc_round(t2, s0, 2);
++        t3 = aes_enc_round(t3, s1, 2);
++
++        t0 = aes_enc_round(t0, s3, 3);
++        t1 = aes_enc_round(t1, s0, 3);
++        t2 = aes_enc_round(t2, s1, 3);
++        t3 = aes_enc_round(t3, s2, 3);
++
++        rk += 8;
++        if (--round_count == 0) {
++            break;
++        }
++
++        s0 = ((volatile unsigned int*)rk)[0];
++        s1 = ((volatile unsigned int*)rk)[1];
++        s2 = ((volatile unsigned int*)rk)[2];
++        s3 = ((volatile unsigned int*)rk)[3];
++
++        s0 = aes_enc_round(s0, t0, 0);
++        s1 = aes_enc_round(s1, t1, 0);
++        s2 = aes_enc_round(s2, t2, 0);
++        s3 = aes_enc_round(s3, t3, 0);
++
++        s0 = aes_enc_round(s0, t1, 1);
++        s1 = aes_enc_round(s1, t2, 1);
++        s2 = aes_enc_round(s2, t3, 1);
++        s3 = aes_enc_round(s3, t0, 1);
++
++        s0 = aes_enc_round(s0, t2, 2);
++        s1 = aes_enc_round(s1, t3, 2);
++        s2 = aes_enc_round(s2, t0, 2);
++        s3 = aes_enc_round(s3, t1, 2);
++
++        s0 = aes_enc_round(s0, t3, 3);
++        s1 = aes_enc_round(s1, t0, 3);
++        s2 = aes_enc_round(s2, t1, 3);
++        s3 = aes_enc_round(s3, t2, 3);
++    }
++
++    s0 = ((volatile unsigned int*)rk)[0];
++    s1 = ((volatile unsigned int*)rk)[1];
++    s2 = ((volatile unsigned int*)rk)[2];
++    s3 = ((volatile unsigned int*)rk)[3];
++
++    s0 = aes_enc_round_last(s0, t0, 0);
++    s1 = aes_enc_round_last(s1, t1, 0);
++    s2 = aes_enc_round_last(s2, t2, 0);
++    s3 = aes_enc_round_last(s3, t3, 0);
++
++    s0 = aes_enc_round_last(s0, t1, 1);
++    s1 = aes_enc_round_last(s1, t2, 1);
++    s2 = aes_enc_round_last(s2, t3, 1);
++    s3 = aes_enc_round_last(s3, t0, 1);
++
++    s0 = aes_enc_round_last(s0, t2, 2);
++    s1 = aes_enc_round_last(s1, t3, 2);
++    s2 = aes_enc_round_last(s2, t0, 2);
++    s3 = aes_enc_round_last(s3, t1, 2);
++
++    s0 = aes_enc_round_last(s0, t3, 3);
++    s1 = aes_enc_round_last(s1, t0, 3);
++    s2 = aes_enc_round_last(s2, t1, 3);
++    s3 = aes_enc_round_last(s3, t2, 3);
++
++    if(((int)out & 3) == 0){
++        ((volatile unsigned int*)out)[0] = s0;
++        ((volatile unsigned int*)out)[1] = s1;
++        ((volatile unsigned int*)out)[2] = s2;
++        ((volatile unsigned int*)out)[3] = s3;
++    } else {
++        vexriscv_aes_store_unaligned(out + 0, s0);
++        vexriscv_aes_store_unaligned(out + 4, s1);
++        vexriscv_aes_store_unaligned(out + 8, s2);
++        vexriscv_aes_store_unaligned(out + 12, s3);
++    }
++}
++
++
++static inline __attribute__((always_inline)) void vexriscv_aes_decrypt(unsigned char *in,
++                          unsigned char *out,
++                          unsigned int *rk,
++                          int round_count) {
++    unsigned int s0, s1, s2, s3, t0, t1, t2, t3;
++    round_count >>= 1;
++
++    if(((int)in & 3) == 0){
++        s0 = ((volatile unsigned int*)in)[0];
++        s1 = ((volatile unsigned int*)in)[1];
++        s2 = ((volatile unsigned int*)in)[2];
++        s3 = ((volatile unsigned int*)in)[3];
++    } else {
++        s0 = vexriscv_aes_load_unaligned(in + 0);
++        s1 = vexriscv_aes_load_unaligned(in + 4);
++        s2 = vexriscv_aes_load_unaligned(in + 8);
++        s3 = vexriscv_aes_load_unaligned(in + 12);
++    }
++
++    t0 = ((volatile unsigned int*)rk)[0];
++    t1 = ((volatile unsigned int*)rk)[1];
++    t2 = ((volatile unsigned int*)rk)[2];
++    t3 = ((volatile unsigned int*)rk)[3];
++
++    s0 ^= t0;
++    s1 ^= t1;
++    s2 ^= t2;
++    s3 ^= t3;
++
++    for (;;) {
++        t0 = ((volatile unsigned int*)rk)[4];
++        t1 = ((volatile unsigned int*)rk)[5];
++        t2 = ((volatile unsigned int*)rk)[6];
++        t3 = ((volatile unsigned int*)rk)[7];
++
++        t0 = aes_dec_round(t0, s0, 0);
++        t1 = aes_dec_round(t1, s1, 0);
++        t2 = aes_dec_round(t2, s2, 0);
++        t3 = aes_dec_round(t3, s3, 0);
++
++        t0 = aes_dec_round(t0, s3, 1);
++        t1 = aes_dec_round(t1, s0, 1);
++        t2 = aes_dec_round(t2, s1, 1);
++        t3 = aes_dec_round(t3, s2, 1);
++
++        t0 = aes_dec_round(t0, s2, 2);
++        t1 = aes_dec_round(t1, s3, 2);
++        t2 = aes_dec_round(t2, s0, 2);
++        t3 = aes_dec_round(t3, s1, 2);
++
++        t0 = aes_dec_round(t0, s1, 3);
++        t1 = aes_dec_round(t1, s2, 3);
++        t2 = aes_dec_round(t2, s3, 3);
++        t3 = aes_dec_round(t3, s0, 3);
++
++        rk += 8;
++        if (--round_count == 0) {
++            break;
++        }
++
++        s0 = ((volatile unsigned int*)rk)[0];
++        s1 = ((volatile unsigned int*)rk)[1];
++        s2 = ((volatile unsigned int*)rk)[2];
++        s3 = ((volatile unsigned int*)rk)[3];
++
++        s0 = aes_dec_round(s0, t0, 0);
++        s1 = aes_dec_round(s1, t1, 0);
++        s2 = aes_dec_round(s2, t2, 0);
++        s3 = aes_dec_round(s3, t3, 0);
++
++        s0 = aes_dec_round(s0, t3, 1);
++        s1 = aes_dec_round(s1, t0, 1);
++        s2 = aes_dec_round(s2, t1, 1);
++        s3 = aes_dec_round(s3, t2, 1);
++
++        s0 = aes_dec_round(s0, t2, 2);
++        s1 = aes_dec_round(s1, t3, 2);
++        s2 = aes_dec_round(s2, t0, 2);
++        s3 = aes_dec_round(s3, t1, 2);
++
++        s0 = aes_dec_round(s0, t1, 3);
++        s1 = aes_dec_round(s1, t2, 3);
++        s2 = aes_dec_round(s2, t3, 3);
++        s3 = aes_dec_round(s3, t0, 3);
++    }
++
++    s0 = ((volatile unsigned int*)rk)[0];
++    s1 = ((volatile unsigned int*)rk)[1];
++    s2 = ((volatile unsigned int*)rk)[2];
++    s3 = ((volatile unsigned int*)rk)[3];
++
++    s0 = aes_dec_round_last(s0, t0, 0);
++    s1 = aes_dec_round_last(s1, t1, 0);
++    s2 = aes_dec_round_last(s2, t2, 0);
++    s3 = aes_dec_round_last(s3, t3, 0);
++
++    s0 = aes_dec_round_last(s0, t3, 1);
++    s1 = aes_dec_round_last(s1, t0, 1);
++    s2 = aes_dec_round_last(s2, t1, 1);
++    s3 = aes_dec_round_last(s3, t2, 1);
++
++    s0 = aes_dec_round_last(s0, t2, 2);
++    s1 = aes_dec_round_last(s1, t3, 2);
++    s2 = aes_dec_round_last(s2, t0, 2);
++    s3 = aes_dec_round_last(s3, t1, 2);
++
++    s0 = aes_dec_round_last(s0, t1, 3);
++    s1 = aes_dec_round_last(s1, t2, 3);
++    s2 = aes_dec_round_last(s2, t3, 3);
++    s3 = aes_dec_round_last(s3, t0, 3);
++
++    if(((int)out & 3) == 0){
++        ((volatile unsigned int*)out)[0] = s0;
++        ((volatile unsigned int*)out)[1] = s1;
++        ((volatile unsigned int*)out)[2] = s2;
++        ((volatile unsigned int*)out)[3] = s3;
++    } else {
++        vexriscv_aes_store_unaligned(out + 0, s0);
++        vexriscv_aes_store_unaligned(out + 4, s1);
++        vexriscv_aes_store_unaligned(out + 8, s2);
++        vexriscv_aes_store_unaligned(out + 12, s3);
++    }
++}
++
++
+diff -ruN libopenssl-1.1.1f_ori/crypto/aes/riscv.h libopenssl-1.1.1f/crypto/aes/riscv.h
+--- libopenssl-1.1.1f_ori/crypto/aes/riscv.h	1970-01-01 01:00:00.000000000 +0100
++++ libopenssl-1.1.1f/crypto/aes/riscv.h	2020-10-31 18:54:35.458536000 +0100
+@@ -0,0 +1,83 @@
++#pragma once
++
++asm(".set regnum_x0  ,  0");
++asm(".set regnum_x1  ,  1");
++asm(".set regnum_x2  ,  2");
++asm(".set regnum_x3  ,  3");
++asm(".set regnum_x4  ,  4");
++asm(".set regnum_x5  ,  5");
++asm(".set regnum_x6  ,  6");
++asm(".set regnum_x7  ,  7");
++asm(".set regnum_x8  ,  8");
++asm(".set regnum_x9  ,  9");
++asm(".set regnum_x10 , 10");
++asm(".set regnum_x11 , 11");
++asm(".set regnum_x12 , 12");
++asm(".set regnum_x13 , 13");
++asm(".set regnum_x14 , 14");
++asm(".set regnum_x15 , 15");
++asm(".set regnum_x16 , 16");
++asm(".set regnum_x17 , 17");
++asm(".set regnum_x18 , 18");
++asm(".set regnum_x19 , 19");
++asm(".set regnum_x20 , 20");
++asm(".set regnum_x21 , 21");
++asm(".set regnum_x22 , 22");
++asm(".set regnum_x23 , 23");
++asm(".set regnum_x24 , 24");
++asm(".set regnum_x25 , 25");
++asm(".set regnum_x26 , 26");
++asm(".set regnum_x27 , 27");
++asm(".set regnum_x28 , 28");
++asm(".set regnum_x29 , 29");
++asm(".set regnum_x30 , 30");
++asm(".set regnum_x31 , 31");
++
++asm(".set regnum_zero,  0");
++asm(".set regnum_ra  ,  1");
++asm(".set regnum_sp  ,  2");
++asm(".set regnum_gp  ,  3");
++asm(".set regnum_tp  ,  4");
++asm(".set regnum_t0  ,  5");
++asm(".set regnum_t1  ,  6");
++asm(".set regnum_t2  ,  7");
++asm(".set regnum_s0  ,  8");
++asm(".set regnum_s1  ,  9");
++asm(".set regnum_a0  , 10");
++asm(".set regnum_a1  , 11");
++asm(".set regnum_a2  , 12");
++asm(".set regnum_a3  , 13");
++asm(".set regnum_a4  , 14");
++asm(".set regnum_a5  , 15");
++asm(".set regnum_a6  , 16");
++asm(".set regnum_a7  , 17");
++asm(".set regnum_s2  , 18");
++asm(".set regnum_s3  , 19");
++asm(".set regnum_s4  , 20");
++asm(".set regnum_s5  , 21");
++asm(".set regnum_s6  , 22");
++asm(".set regnum_s7  , 23");
++asm(".set regnum_s8  , 24");
++asm(".set regnum_s9  , 25");
++asm(".set regnum_s10 , 26");
++asm(".set regnum_s11 , 27");
++asm(".set regnum_t3  , 28");
++asm(".set regnum_t4  , 29");
++asm(".set regnum_t5  , 30");
++asm(".set regnum_t6  , 31");
++
++asm(".set CUSTOM0  , 0x0B");
++asm(".set CUSTOM1  , 0x2B");
++
++#define opcode_R(opcode, func3, func7, rs1, rs2)   \
++({                                             \
++    register unsigned long __v;                \
++    asm volatile(                              \
++     ".word ((" #opcode ") | (regnum_%0 << 7) | (regnum_%1 << 15) | (regnum_%2 << 20) | ((" #func3 ") << 12) | ((" #func7 ") << 25));"   \
++     : [rd] "=r" (__v)                          \
++     : "r" (rs1), "r" (rs2)        \
++    );                                         \
++    __v;                                       \
++})
++
++

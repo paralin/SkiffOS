@@ -1,0 +1,11 @@
+BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
+BR2_LINUX_KERNEL_IMAGE=y
+
+# Based on litex-hub/linux litex-rebase branch
+# 63c753e6a59b59a685a2a30f0e66a301e3201370
+# 5.11-rc6
+# branch: skiff-litex-riscv tag skiff-litex-riscv-1
+BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="https://github.com/litex-hub/linux/archive/63c753e6a59b59a685a2a30f0e66a301e3201370/linux-litex-riscv-5.11-rc6.tar.gz"
+BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_5_9=y
+
+BR2_KERNEL_HEADERS_AS_KERNEL=y

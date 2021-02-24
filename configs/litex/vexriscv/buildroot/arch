@@ -1,0 +1,9 @@
+BR2_riscv=y
+BR2_RISCV_32=y
+
+# Instruction Set Extensions
+BR2_riscv_custom=y
+BR2_RISCV_ISA_CUSTOM_RVM=y
+BR2_RISCV_ISA_CUSTOM_RVA=y
+BR2_RISCV_ISA_CUSTOM_RVC=n
+BR2_RISCV_ABI_ILP32=y

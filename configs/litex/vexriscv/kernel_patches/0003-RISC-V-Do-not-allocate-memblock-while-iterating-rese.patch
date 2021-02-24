@@ -1,0 +1,58 @@
+From 7e63ac7d00c1111ecbde2b1e50ef6f3e87bf9d1b Mon Sep 17 00:00:00 2001
+From: Atish Patra <atish.patra@wdc.com>
+Date: Thu, 7 Jan 2021 01:26:49 -0800
+Subject: [PATCH] RISC-V: Do not allocate memblock while iterating reserved
+ memblocks
+
+Currently, resource tree allocates memory blocks while iterating on the
+list. It leads to following kernel warning because memblock allocation
+also invokes memory block reservation API.
+
+[    0.000000] ------------[ cut here ]------------
+[    0.000000] WARNING: CPU: 0 PID: 0 at kernel/resource.c:795
+__insert_resource+0x8e/0xd0
+[    0.000000] Modules linked in:
+[    0.000000] CPU: 0 PID: 0 Comm: swapper Not tainted
+5.10.0-00022-ge20097fb37e2-dirty #549
+[    0.000000] epc: c00125c2 ra : c001262c sp : c1c01f50
+[    0.000000]  gp : c1d456e0 tp : c1c0a980 t0 : ffffcf20
+[    0.000000]  t1 : 00000000 t2 : 00000000 s0 : c1c01f60
+[    0.000000]  s1 : ffffcf00 a0 : ffffff00 a1 : c1c0c0c4
+[    0.000000]  a2 : 80c12b15 a3 : 80402000 a4 : 80402000
+[    0.000000]  a5 : c1c0c0c4 a6 : 80c12b15 a7 : f5faf600
+[    0.000000]  s2 : c1c0c0c4 s3 : c1c0e000 s4 : c1009a80
+[    0.000000]  s5 : c1c0c000 s6 : c1d48000 s7 : c1613b4c
+[    0.000000]  s8 : 00000fff s9 : 80000200 s10: c1613b40
+[    0.000000]  s11: 00000000 t3 : c1d4a000 t4 : ffffffff
+
+This is also unnecessary as we can pre-compute the total memblocks required
+for each memory region and allocate it before the loop. It save precious
+boot time not going through memblock allocation code every time.
+
+Fixes: 00ab027a3b82 ("RISC-V: Add kernel image sections to the resource tree")
+
+Signed-off-by: Atish Patra <atish.patra@wdc.com>
+---
+ arch/riscv/include/asm/cache.h | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/arch/riscv/include/asm/cache.h b/arch/riscv/include/asm/cache.h
+index 9b58b104559e..51c217ad32fc 100644
+--- a/arch/riscv/include/asm/cache.h
++++ b/arch/riscv/include/asm/cache.h
+@@ -7,7 +7,11 @@
+ #ifndef _ASM_RISCV_CACHE_H
+ #define _ASM_RISCV_CACHE_H
+ 
+-#define L1_CACHE_SHIFT		6
++#ifdef CONFIG_64BIT
++#define L1_CACHE_SHIFT 6
++#else
++#define L1_CACHE_SHIFT 5
++#endif
+ 
+ #define L1_CACHE_BYTES		(1 << L1_CACHE_SHIFT)
+ 
+-- 
+2.30.1
+

@@ -1,0 +1,39 @@
+From 8b048e83685658c48266fe37b8ad5c541ff8df7f Mon Sep 17 00:00:00 2001
+From: Sebastien Van Cauwenberghe <svancau at gmail.com>
+Date: Mon, 16 Nov 2020 13:37:32 +0100
+Subject: [PATCH] riscv: Align on L1_CACHE_BYTES when STRICT_KERNEL_RWX is
+ disabled
+
+Allows the sections to be aligned on smaller boundaries and
+therefore results in a smaller kernel image size.
+
+Signed-off-by: Sebastien Van Cauwenberghe <svancau at gmail.com>
+---
+ arch/riscv/include/asm/set_memory.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/riscv/include/asm/set_memory.h b/arch/riscv/include/asm/set_memory.h
+index 211eb8244a45..8b80c80c7f1a 100644
+--- a/arch/riscv/include/asm/set_memory.h
++++ b/arch/riscv/include/asm/set_memory.h
+@@ -32,14 +32,14 @@ bool kernel_page_present(struct page *page);
+ 
+ #endif /* __ASSEMBLY__ */
+ 
+-#ifdef CONFIG_ARCH_HAS_STRICT_KERNEL_RWX
++#ifdef CONFIG_STRICT_KERNEL_RWX
+ #ifdef CONFIG_64BIT
+ #define SECTION_ALIGN (1 << 21)
+ #else
+ #define SECTION_ALIGN (1 << 22)
+ #endif
+-#else /* !CONFIG_ARCH_HAS_STRICT_KERNEL_RWX */
++#else /* !CONFIG_STRICT_KERNEL_RWX */
+ #define SECTION_ALIGN L1_CACHE_BYTES
+-#endif /* CONFIG_ARCH_HAS_STRICT_KERNEL_RWX */
++#endif /* CONFIG_STRICT_KERNEL_RWX */
+ 
+ #endif /* _ASM_RISCV_SET_MEMORY_H */
+-- 
+2.30.1
+

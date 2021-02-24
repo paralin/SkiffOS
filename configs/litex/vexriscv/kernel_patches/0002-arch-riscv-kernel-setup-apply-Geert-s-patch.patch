@@ -1,0 +1,25 @@
+From 6414eeb8b863bd029a056d6ee41ae5b77658ff50 Mon Sep 17 00:00:00 2001
+From: Florent Kermarrec <florent@enjoy-digital.fr>
+Date: Mon, 11 Jan 2021 09:45:38 +0100
+Subject: [PATCH] arch/riscv/kernel/setup: apply Geert's patch.
+
+---
+ arch/riscv/kernel/setup.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/riscv/kernel/setup.c b/arch/riscv/kernel/setup.c
+index 3fa3f26dde85..c450b69d968a 100644
+--- a/arch/riscv/kernel/setup.c
++++ b/arch/riscv/kernel/setup.c
+@@ -293,6 +293,7 @@ void free_initmem(void)
+ 	unsigned long init_begin = (unsigned long)__init_begin;
+ 	unsigned long init_end = (unsigned long)__init_end;
+ 
+-	set_memory_rw_nx(init_begin, (init_end - init_begin) >> PAGE_SHIFT);
++	if (IS_ENABLED(CONFIG_STRICT_KERNEL_RWX))
++		set_memory_rw_nx(init_begin, (init_end - init_begin) >> PAGE_SHIFT);
+ 	free_initmem_default(POISON_FREE_INITMEM);
+ }
+-- 
+2.30.1
+

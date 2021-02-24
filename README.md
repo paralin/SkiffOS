@@ -112,6 +112,7 @@ Here are the boards/systems currently supported by Skiff:
 | [BananaPi M2+]       | bananapi/m2plus    | ✔ U-Boot 2020.10     | ✔ 5.11.1        |                        |
 | [BananaPi M3]        | bananapi/m3        | ✔ U-Boot 2020.10     | ✔ 5.11.1        | ✔ Tested               |
 | [Intel x86/64]       | intel/x64          | ✔ Grub               | ✔ 5.11.1        | ✔ Tested               |
+| [LiteX VexRiscV]     | [litex/vexriscv]   | N/A                  | ✔ litex-5.11    | ⚠ In development       |
 | [NVIDIA Jetson Nano] | [jetson/nano]      | ✔ U-Boot             | ✔ 4.9.140       | ✔ Tested               |
 | [NVIDIA Jetson TX2]  | [jetson/tx2]       | ✔ U-Boot             | ✔ 4.9.140       | ✔ Tested               |
 | [Odroid C2]          | [odroid/c2]        | ✔ U-Boot 2020.10     | ✔ tb-5.10.12    | ⚠ Discontinued         |
@@ -171,6 +172,7 @@ Here are the boards/systems currently supported by Skiff:
 [virt/wsl]: ./configs/virt/wsl
 [jetson/nano]: ./configs/jetson/nano
 [jetson/tx2]: ./configs/jetson/tx2
+[litex/vexriscv]: ./configs/litex/vexriscv
 [odroid/c2]: ./configs/odroid
 [odroid/c4]: ./configs/odroid
 [odroid/u]: ./configs/odroid
