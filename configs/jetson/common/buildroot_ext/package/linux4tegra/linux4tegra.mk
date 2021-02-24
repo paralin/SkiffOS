@@ -4,13 +4,13 @@
 #
 ################################################################################
 
-LINUX4TEGRA_VERSION = 32.4.3
+LINUX4TEGRA_VERSION = 32.5.0
 
 ifeq ($(BR2_PACKAGE_LINUX4TEGRA_PLATFORM_T186REF),y)
-LINUX4TEGRA_SITE = https://developer.nvidia.com/embedded/L4T/r32_Release_v4.3/t186ref_release_aarch64
+LINUX4TEGRA_SITE = https://developer.nvidia.com/embedded/L4T/r32_Release_v5.0/T186
 LINUX4TEGRA_SOURCE = Tegra186_Linux_R$(LINUX4TEGRA_VERSION)_aarch64.tbz2
 else # ifeq ($(BR2_PACKAGE_LINUX4TEGRA_PLATFORM_T210REF),y)
-LINUX4TEGRA_SITE = https://developer.nvidia.com/embedded/L4T/r32_Release_v4.3/t210ref_release_aarch64
+LINUX4TEGRA_SITE = https://developer.nvidia.com/embedded/L4T/r32_Release_v5.0/T210
 LINUX4TEGRA_SOURCE = Tegra210_Linux_R$(LINUX4TEGRA_VERSION)_aarch64.tbz2
 endif
 

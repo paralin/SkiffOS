@@ -1,53 +1,64 @@
-From 922eac9382d7261ea0ef891ab2d8455c9b0db4c5 Mon Sep 17 00:00:00 2001
+From 1f3b35a5905b858053ac500618b6c20cecc65c6f Mon Sep 17 00:00:00 2001
 From: Christian Stewart <christian@paral.in>
-Date: Fri, 17 Jul 2020 13:58:43 -0700
+Date: Sun, 21 Feb 2021 23:04:52 -0800
 Subject: [PATCH] Adjust flash.sh for flashing Buildroot-produced disk image
 
 Signed-off-by: Christian Stewart <christian@paral.in>
 ---
- flash.sh | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ flash.sh | 23 ++++++-----------------
+ 1 file changed, 6 insertions(+), 17 deletions(-)
 
 diff --git a/flash.sh b/flash.sh
-index 38c0cbb..b4ed264 100755
+index cb7ad11..a7ae57f 100755
 --- a/flash.sh
 +++ b/flash.sh
-@@ -1339,9 +1339,9 @@ elif [ "${target_rootdev}" == "internal" ] || \
- 		usage allunknown 1;
- 	fi
+@@ -1019,9 +1019,8 @@ function create_fsimg {
+ 		APP_TAG+="-e s/APPFILE/${localsysfile}/ ";
+ 		# this is set at a setval function
+ 		if [ "${target_partname}" = "" ] || [ "${target_partname}" = "APP" ]; then
+-			build_fsimg "${localsysfile}" "${fillpat}" \
+-				    "${rootfssize}" "${rootfs_type}" \
+-				    "${source_folder}" "${cmdline}";
++			echo "Skipping image build and setting target partfile to INITRD."
++			ln -fs ${INITRD} ./system.img
+ 		fi;
  
--	cmdline+="root=PARTUUID=${rootfsuuid} rw rootwait rootfstype=ext4 "
-+	cmdline+="root=/dev/${target_rootdev} rw rootwait"
+ 		if [[ "${rootfs_ab}" == 1 ]]; then
+@@ -1649,12 +1648,12 @@ elif [ "${target_rootdev}" == "internal" ] || \
+ 
+ 		bootpartuuid_restore;
+ 
+-		cmdline+="root=UUID=${_tmp_uuid} rw rootwait rootfstype=ext4 "
++	        cmdline+="root=/dev/${target_rootdev} rw rootwait "
+ 	else
+-		cmdline+="root=PARTUUID=${_tmp_uuid} rw rootwait rootfstype=ext4 "
++	        cmdline+="root=/dev/${target_rootdev} rw rootwait "
+ 	fi;
  else
 -	cmdline+="root=/dev/${target_rootdev} rw rootwait rootfstype=ext4 "
-+	cmdline+="root=/dev/${target_rootdev} rw rootwait"
++	cmdline+="root=/dev/${target_rootdev} rw rootwait "
  fi;
  
  if [ "${CMDLINE_ADD}" != "" ]; then
-@@ -1512,11 +1512,7 @@ if [ "${write_image_name}" != "" ]; then
+@@ -1883,17 +1882,7 @@ if [ "${write_image_name}" != "" ]; then
  	fi
  fi
  
 -if [ "${INITRD_IN_BOOTIMG}" = "yes" ]; then
 -	ramdisk=initrd;
+-	if [[ "${rootfs_ab}" == 1 && "${disk_enc_enable}" == 1 ]]; then
+-		ramdisk_b=initrd_b;
+-	fi
 -else
 -	ramdisk="/dev/null"
+-	if [[ "${rootfs_ab}" == 1 && "${disk_enc_enable}" == 1 ]]; then
+-		ramdisk_b="/dev/null";
+-	fi
 -fi
 +ramdisk="/dev/null"
- echo -n "Making Boot image... ";
- MKBOOTARG+="--kernel ${kernel_image} ";
- MKBOOTARG+="--ramdisk ${ramdisk} ";
-@@ -1977,8 +1973,8 @@ if [ "${reuse_systemimg}" = "true" ] || [ "${skip_systemimg}" = "true" ]; then
- elif [ "${rootdev_type}" = "internal" ]; then
- 	APP_TAG+="-e s/APPFILE/${localsysfile}/ ";
- 	if [ "${target_partname}" = "" -o "${target_partname}" = "APP" ]; then
--		build_fsimg "$localsysfile" "$fillpat" \
--		    "$rootfssize" "$rootfs_type" "$rootfs_dir" "$cmdline";
-+            echo "Skipping image build and setting target_partfile to INITRD.";
-+            ln -fs ${INITRD} ./system.img;
- 	fi;
- elif [ "${rootdev_type}" = "network" -o "${rootdev_type}" = "external" ]; then
- 	APP_TAG+="-e s/APPFILE/${localsysfile}/ ";
+ 
+ if [[ "${rootfs_ab}" == 1 ]]; then
+ 	if [ "${target_rootdev}" == "external" ] || \
 -- 
-2.29.2
+2.30.1
 
