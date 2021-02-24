@@ -111,6 +111,8 @@ Here are the boards/systems currently supported by Skiff:
 | [BananaPi M1+/Pro]   | bananapi/m1plus    | ✔ U-Boot 2020.10     | ✔ 5.11.1        | ⚠ Discontinued         |
 | [BananaPi M2+]       | bananapi/m2plus    | ✔ U-Boot 2020.10     | ✔ 5.11.1        |                        |
 | [BananaPi M3]        | bananapi/m3        | ✔ U-Boot 2020.10     | ✔ 5.11.1        | ✔ Tested               |
+| [BeagleBone AI]      | beaglebone/ai      | ✔ U-Boot             | ✔ ti-4.14.108   |                        |
+| [BeagleBone Black]   | beaglebone/black   | ✔ U-Boot             | ✔ ti-4.14.108   |                        |
 | [Intel x86/64]       | intel/x64          | ✔ Grub               | ✔ 5.11.1        | ✔ Tested               |
 | [NVIDIA Jetson Nano] | [jetson/nano]      | ✔ U-Boot             | ✔ 4.9.140       | ✔ Tested               |
 | [NVIDIA Jetson TX2]  | [jetson/tx2]       | ✔ U-Boot             | ✔ 4.9.140       | ✔ Tested               |
@@ -139,6 +141,8 @@ Here are the boards/systems currently supported by Skiff:
 [BananaPi M1]: http://linux-sunxi.org/LeMaker_Banana_Pi#Variants
 [BananaPi M2+]: http://linux-sunxi.org/LeMaker_Banana_Pi#Variants
 [BananaPi M3]: http://linux-sunxi.org/Banana_Pi_M3
+[BeagleBone AI]: http://beagleboard.org/ai
+[BeagleBone Black]: http://beagleboard.org/black
 [Docker Img]: ./docker 
 [Intel x86/64]: ./configs/intel/x64
 [NVIDIA Jetson Nano]: ./configs/jetson
