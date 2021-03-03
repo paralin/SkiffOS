@@ -1,7 +1,7 @@
 app-editors/emacs gtk3 png sound svg xft xwidgets gui json dbus harfbuzz
 app-text/ghostscript-gpl cups
 app-text/texlive graphics games music science publishers pstricks texi2html xetex png
-cross-*/gcc graphite
+cross-*/gcc graphite vtv
 dev-db/mysql -server
 dev-lang/python sqlite
 dev-libs/libxml2 python
