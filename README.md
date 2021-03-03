@@ -420,6 +420,8 @@ incompatibility with your build host operating system.
 
 ## Support
 
+[![Support Server](https://img.shields.io/discord/803825858599059487.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/EKVkdVmvwT)
+
 If you encounter issues or questions at any point when using Skiff, please file
 a [GitHub issue](https://github.com/skiffos/SkiffOS/issues/new) and/or [Join
 Discord](https://discord.gg/EKVkdVmvwT).
