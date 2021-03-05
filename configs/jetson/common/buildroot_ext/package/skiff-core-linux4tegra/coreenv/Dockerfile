@@ -34,31 +34,24 @@ RUN mkdir -p /sources/linux4tegra && \
   /sources/linux4tegra/nv_tegra/l4t_deb_packages/
 
 # configure debian packages to point to mock paths
-RUN mkdir -p /sources/l4t_debs_patched && \
-  cd /sources/l4t_debs_patched && \
-  set -e && \
-  for dpkgf in /sources/linux4tegra/nv_tegra/l4t_deb_packages/*.deb; do \
-  mkdir -p ./workdir; \
-  dpkg-deb -R $dpkgf ./workdir; \
-  if [ -f ./workdir/DEBIAN/preinst ]; then \
-  sed -i \
-    -e 's#/proc/device-tree/compatible#/etc/tegra-soc/device-tree/compatible#g' \
-    ./workdir/DEBIAN/preinst; \
-  fi; \
-  dpkg-deb -b workdir /sources/l4t_debs_patched/$(basename $dpkgf); \
-  rm -rf ./workdir; \
-  done
+COPY ./patch-debs.bash /sources/patch-debs.bash
+RUN mkdir -p /sources/l4t_debs_workdir /sources/l4t_debs_patched && \
+  cd /sources/l4t_debs_workdir && \
+  bash /sources/patch-debs.bash && \
+  cd ../ && rm -rf /sources/l4t_debs_workdir
+
+# Ubuntu upstream
+FROM ubuntu:18.04
 
 # NVIDIA upstream
-FROM nvcr.io/nvidia/l4t-base:r32.4.3
+# FROM nvcr.io/nvidia/l4t-base:r32.4.3
 
 # setup environment
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
-ENV container docker
-
-ENV L4T_VERSION 32.4.3-20200625213407
-ENV L4T_SOC t186
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    container=docker \
+    L4T_VERSION=32.4.3-20200625213407 \
+    L4T_SOC=t186
 
 # All packages, including requisite packages for nvidia.
 # Also installs l4t_deb_packages.
