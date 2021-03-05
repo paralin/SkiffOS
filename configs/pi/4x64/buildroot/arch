@@ -1,4 +1,5 @@
 BR2_aarch64=y
 BR2_cortex_a72=y
+# note: cflags override this to enable 64-bit NEON
 BR2_ARM_FPU_VFPV4=y
 
