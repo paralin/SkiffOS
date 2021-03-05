@@ -5,6 +5,7 @@
 # performance and compatibility.
 
 app-arch/bzip2 ~ARCH
+app-arch/p7zip ~ARCH
 app-benchmarks/stress-ng ~ARCH
 app-cdr/dolphin-plugins-mountiso ~ARCH
 app-editors/emacs ~ARCH
