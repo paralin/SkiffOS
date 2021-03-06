@@ -19,7 +19,7 @@ RUN mkdir -p /data /sources && \
   rm -rf /var/lib/apt/lists/*
 
 # download sources
-ENV L4T_URL https://developer.nvidia.com/embedded/L4T/r32_Release_v4.3/t186ref_release_aarch64/Tegra186_Linux_R32.4.3_aarch64.tbz2
+ENV L4T_URL https://developer.nvidia.com/embedded/l4t/r32_release_v5.1/r32_release_v5.1/t186/tegra186_linux_r32.5.1_aarch64.tbz2
 ENV L4T_TAR linux4tegra-aarch64.tbz2
 RUN wget -q "${L4T_URL}" -O /data/${L4T_TAR}
 
@@ -50,7 +50,7 @@ FROM ubuntu:18.04
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     container=docker \
-    L4T_VERSION=32.4.3-20200625213407 \
+    L4T_VERSION=32.5.1 \
     L4T_SOC=t186
 
 # All packages, including requisite packages for nvidia.
