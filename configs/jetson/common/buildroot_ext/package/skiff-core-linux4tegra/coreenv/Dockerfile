@@ -203,5 +203,5 @@ RUN systemctl set-default graphical.target && \
          -exec echo \{} \; \
          -exec rm \{} \;
 
-WORKDIR /home/nvidia
+WORKDIR /
 ENTRYPOINT ["/lib/systemd/systemd"]

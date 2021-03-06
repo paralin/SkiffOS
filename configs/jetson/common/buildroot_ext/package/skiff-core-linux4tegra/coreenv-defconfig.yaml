@@ -1,29 +1,46 @@
 containers:
   core:
+    # Ubuntu with Linux4Tegra debs applied + desktop env
+    image: skiffos/skiff-core-linux4tegra:latest
+    # systemd
+    entrypoint: ["/lib/systemd/systemd"]
+    env: ["container=docker"]
+    stopSignal: RTMIN+3
+    tty: true
+    disableInit: true
+    workingDirectory: /
+    entrypoint: ["/lib/systemd/systemd"]
+    mounts:
+      - /dev:/dev
+      - /etc/resolv.conf:/etc/resolv.conf:ro
+      - /etc/hostname:/etc/hostname:ro
+      - /lib/modules:/lib/modules:ro
+      - /mnt:/mnt
+      - /run/udev:/run/udev
+      - /mnt/persist/skiff/core/repos/docker:/var/lib/docker
+      - /mnt/persist/skiff/core/repos/log:/var/log
+      - /mnt/persist/skiff/core/repos/tmp:/var/tmp
+    privileged: true
+    startAfterCreate: true
+    restartPolicy: "always"
     capAdd:
       - ALL
-    disableInit: true
-    dns:
-      - "8.8.8.8"
-      - "8.8.4.4"
     hostIPC: true
     hostUTS: true
     hostNetwork: true
-    image: skiffos/skiff-core-linux4tegra:latest
-    mounts:
-      - /dev:/dev
-      - /lib/modules:/lib/modules
-      - /mnt/persist/nvidia-docker:/var/lib/docker
-      - /mnt:/mnt
-      - /run/udev:/run/udev
-    privileged: true
-    restartPolicy: "always"
     securityOpt:
       - seccomp=unconfined
-    startAfterCreate: true
-    tty: true
-    workingDirectory: /home/nvidia
+    tmpFs:
+      /run: rw,noexec,nosuid,size=65536k
+      /run/lock: rw,noexec,nosuid,size=65536k
 users:
+  core:
+    container: core
+    containerUser: nvidia
+    containerShell:
+      - "/bin/bash"
+    auth:
+      copyRootKeys: true
   nvidia:
     container: core
     containerUser: nvidia
@@ -33,5 +50,10 @@ users:
       copyRootKeys: true
 images:
   skiffos/skiff-core-linux4tegra:latest:
+    # note: remove the :pull: section to build from scratch
+    pull:
+      policy: ifnotexists
+      # avoid docker hub rate limits
+      registry: quay.io
     build:
       source: /opt/skiff/coreenv/skiff-core-linux4tegra
