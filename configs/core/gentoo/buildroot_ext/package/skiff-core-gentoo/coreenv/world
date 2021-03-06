@@ -1,7 +1,8 @@
-app-arch/p7zip
 app-admin/sudo
+app-arch/p7zip
 app-editors/vim
 app-eselect/eselect-repository
+app-misc/neofetch
 app-misc/screen
 app-misc/tmux
 app-portage/cpuid2cpuflags
