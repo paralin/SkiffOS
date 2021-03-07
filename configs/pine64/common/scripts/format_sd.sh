@@ -68,35 +68,49 @@ set -e
 
 echo "Formatting device..."
 sudo dd if=/dev/zero of=$PINE64_SD bs=8k count=13 oflag=dsync
+
+echo "Creating partitions..."
+sudo partprobe ${PINE64_SD} || true
 sudo parted $PINE64_SD mklabel msdos
 
-echo "Making boot partition..."
+# boot
 sudo parted -a optimal $PINE64_SD mkpart primary fat32 128MiB 510MiB
 sudo parted $PINE64_SD set 1 boot on
 sudo parted $PINE64_SD set 1 lba on
+
+# rootfs
+sudo parted -a optimal $PINE64_SD mkpart primary ext4 510MiB 1024MiB
+
+# persist
+sudo parted -a optimal $PINE64_SD -- mkpart primary ext4 1024MiB "-1s"
+
+echo "Waiting for partprobe..."
+partprobe $PINE64_SD || true
+sleep 2
+partprobe $PINE64_SD || true
 
 PINE64_SD_SFX=$PINE64_SD
 if [ -b ${PINE64_SD}p1 ]; then
   PINE64_SD_SFX=${PINE64_SD}p
 fi
 
+if [ ! -b ${PINE64_SD_SFX}1 ]; then
+    echo "Warning: it appears your kernel has not created partition files at ${PINE64_SD_SFX}."
+fi
+
+echo "Formatting boot partition..."
 mkfs.vfat -F 32 ${PINE64_SD_SFX}1
 fatlabel ${PINE64_SD_SFX}1 boot
 
-echo "Making rootfs partition..."
-sudo parted -a optimal $PINE64_SD mkpart primary ext4 510MiB 1024MiB
+echo "Formatting rootfs partition..."
 $MKEXT4 -L "rootfs" ${PINE64_SD_SFX}2
 
-echo "Making persist partition..."
-sudo parted -a optimal $PINE64_SD -- mkpart primary ext4 1024MiB "-1s"
+echo "Formatting persist partition..."
 $MKEXT4 -L "persist" ${PINE64_SD_SFX}3
 
 sync && sync
-sleep 1
 
 echo "Flashing u-boot..."
-
-echo "u-boot fusing"
 if [ -n "$idbloader" ]; then
     # idbloader for rk3399 machines
     dd iflag=dsync oflag=dsync if=$idbloader of=$PINE64_SD seek=64 ${SD_FUSE_DD_ARGS}
@@ -104,5 +118,4 @@ if [ -n "$idbloader" ]; then
 else
     dd iflag=dsync oflag=dsync if=$ubootimg of=$PINE64_SD seek=8 bs=1024 ${SD_FUSE_DD_ARGS}
 fi
-
 cd -
