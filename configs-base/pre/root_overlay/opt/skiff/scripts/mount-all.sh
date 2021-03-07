@@ -14,6 +14,7 @@ EXTRA_SCRIPTS_DIR=/opt/skiff/scripts/mount-all.d
 
 # Run any additional pre setup scripts.
 # We source these to allow overriding the above variables.
+export SKIFF_RUN_INIT_ACTIONS="true"
 for i in ${PRE_SCRIPTS_DIR}/*.sh ; do
     if [ -r $i ]; then
         source $i
