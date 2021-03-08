@@ -1,10 +1,12 @@
 # see other Skiff packages for more advanced defaults:
 #  - core/alpine
-#  - core/ubuntu
-#  - core/nixos
 #  - core/gentoo
+#  - core/manjaro
+#  - core/nixos
+#  - core/ubuntu
 # Documented at https://github.com/skiffos/skiff-core
-containers: # can add unlimited containers
+
+containers:
   core: # name of the docker container
     image: skiffos/skiff-core-ubuntu:latest
     entrypoint: ["/lib/systemd/systemd"]
@@ -21,6 +23,10 @@ containers: # can add unlimited containers
       - /lib/modules:/lib/modules:ro
       - /mnt:/mnt
       - /run/udev:/run/udev
+      - /mnt/persist/skiff/core/repos/apt:/var/lib/apt
+      - /mnt/persist/skiff/core/repos/linux:/usr/src
+      - /mnt/persist/skiff/core/repos/log:/var/log
+      - /mnt/persist/skiff/core/repos/tmp:/var/tmp
     privileged: true
     startAfterCreate: true
     restartPolicy: "always"

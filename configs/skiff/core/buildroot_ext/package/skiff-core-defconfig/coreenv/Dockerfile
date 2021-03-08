@@ -5,7 +5,7 @@ ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 ENV container docker
 
-# Core packages
+# Core packages, including ubuntu-desktop-minimal.
 RUN export DEBIAN_FRONTEND=noninteractive; \
   apt-get update && \
   apt-get dist-upgrade -y && \
@@ -13,28 +13,29 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
   --no-install-recommends \
   -o "Dpkg::Options::=--force-confdef"  \
   -o "Dpkg::Options::=--force-confold"  \
+  autotools-dev \
   build-essential \
-  openssh-client \
-  rsync \
-  lsb-release \
-  systemd \
-  usbutils \
-  sudo \
+  cups \
   curl \
-  htop \
+  firefox \
+  fonts-ubuntu \
   git \
-  vim \
+  htop \
+  locales \
+  lsb-release \
   nano \
   net-tools \
+  openssh-client \
+  rsync \
   software-properties-common \
+  sudo \
+  systemd \
+  ubuntu-desktop-minimal \
   unzip \
-  autotools-dev \
-  cups \
-  lightdm \
+  usbutils \
+  vim \
   xorg \
   xserver-xorg-input-all \
-  locales \
-  ubuntu-desktop-minimal \
   wget && \
   apt-get autoremove -y && \
   rm -rf /var/lib/apt/lists/*
