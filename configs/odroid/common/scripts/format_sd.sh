@@ -77,31 +77,48 @@ set -x
 set -e
 
 echo "Formatting device..."
+sudo dd if=/dev/zero of=$ODROID_SD bs=8k count=13 oflag=dsync
+
+echo "Creating partitions..."
+sudo partprobe ${ODROID_SD} || true
 sudo parted $ODROID_SD mklabel msdos
 
-echo "Making boot partition..."
+# boot
 sudo parted -a optimal $ODROID_SD mkpart primary fat32 2MiB 310MiB
 sudo parted $ODROID_SD set 1 boot on
 sudo parted $ODROID_SD set 1 lba on
+
+# rootfs
+sudo parted -a optimal $ODROID_SD mkpart primary ext4 310MiB 600MiB
+
+# persist
+sudo parted -a optimal $ODROID_SD -- mkpart primary ext4 600MiB "-1s"
+
+echo "Waiting for partprobe..."
+partprobe $ODROID_SD || true
+sleep 2
+partprobe $ODROID_SD || true
 
 ODROID_SD_SFX=$ODROID_SD
 if [ -b ${ODROID_SD}p1 ]; then
   ODROID_SD_SFX=${ODROID_SD}p
 fi
 
+if [ ! -b ${ODROID_SD_SFX}1 ]; then
+    echo "Warning: it appears your kernel has not created partition files at ${ODROID_SD_SFX}."
+fi
+
+echo "Formatting boot partition..."
 mkfs.vfat -F 32 ${ODROID_SD_SFX}1
 fatlabel ${ODROID_SD_SFX}1 boot
 
-echo "Making rootfs partition..."
-sudo parted -a optimal $ODROID_SD mkpart primary ext4 310MiB 600MiB
+echo "Formatting rootfs partition..."
 $MKEXT4 -L "rootfs" ${ODROID_SD_SFX}2
 
-echo "Making persist partition..."
-sudo parted -a optimal $ODROID_SD -- mkpart primary ext4 600MiB "-1s"
+echo "Formatting persist partition..."
 $MKEXT4 -L "persist" ${ODROID_SD_SFX}3
 
 sync && sync
-sleep 1
 
 echo "Flashing u-boot..."
 cd $ubootscripts
