@@ -1,6 +1,6 @@
 # Download the linux4tegra sources including nvidia packages.
 # Subject to the NVIDIA Customer License.
-FROM ubuntu:latest AS nvsources
+FROM ubuntu:18.04 AS nvsources
 
 # install wget + make data dir
 RUN mkdir -p /data /sources && \
@@ -41,10 +41,10 @@ RUN mkdir -p /sources/l4t_debs_workdir /sources/l4t_debs_patched && \
   cd ../ && rm -rf /sources/l4t_debs_workdir
 
 # Ubuntu upstream
-FROM ubuntu:18.04
+FROM ubuntu:18.04 as stage2
 
 # NVIDIA upstream
-# FROM nvcr.io/nvidia/l4t-base:r32.4.3
+# FROM nvcr.io/nvidia/l4t-base:r32.5.1
 
 # setup environment
 ENV LANG=C.UTF-8 \
@@ -61,28 +61,22 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
   apt-get install -y  \
   -o "Dpkg::Options::=--force-confdef"  \
   -o "Dpkg::Options::=--force-confnew"  \
-  build-essential \
-  openssh-client \
-  rsync \
-  lsb-release \
-  systemd \
-  device-tree-compiler \
-  usbutils \
-  sudo \
-  curl \
-  htop \
-  git \
-  sed \
-  libunwind8 \
-  vim \
-  nano \
-  net-tools \
-  software-properties-common \
-  unzip \
   autotools-dev \
-  cups \
+  build-essential \
+  curl \
+  git \
   locales \
-  wget # &&
+  software-properties-common \
+  sudo \
+  systemd \
+  unzip \
+  usbutils \
+  vim \
+  libunwind8 \
+  sed \
+  locales \
+  wget && \
+  apt-get autoremove -y
 
 # copy l4t_deb_packages
 COPY --from=nvsources /sources/l4t_debs_patched \
@@ -122,7 +116,15 @@ RUN mkdir -p /etc/tegra-soc/device-tree && \
   echo "nvidia,quillnvidia,p2597-0000+p3310-1000nvidia,tegra186" >\
     /etc/tegra-soc/device-tree/compatible
 
-RUN apt-get install -y \
+# linux4tegra
+RUN export DEBIAN_FRONTEND=noninteractive; \
+  apt-get autoremove -y && \
+  apt-get dist-upgrade -y && \
+  apt-get install -y  \
+  -o "Dpkg::Options::=--force-confdef"  \
+  -o "Dpkg::Options::=--force-confnew"  \
+  mesa-utils libgles2-mesa-dev libsdl2-dev libblas3 liblapack3 && \
+  apt-get install -y \
   -o "Dpkg::Options::=--force-confdef"  \
   -o "Dpkg::Options::=--force-confnew"  \
   /usr/src/l4t_deb_packages/*.deb && \
@@ -130,43 +132,57 @@ RUN apt-get install -y \
   rm -rf /var/lib/apt/lists/* && \
   rm -rf /usr/src/l4t_deb_packages
 
-ENV LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
+# re-pack base image for performance
+FROM scratch
 
-# lightdm and graphics
-RUN export DEBIAN_FRONTEND=noninteractive; \
-  apt-get update && \
-  apt-get dist-upgrade -y && \
-  apt-get install -y  \
-  -o "Dpkg::Options::=--force-confdef"  \
-  -o "Dpkg::Options::=--force-confnew"  \
-  lightdm xorg locales lightdm-gtk-greeter \
-  desktop-base mesa-utils x11-apps xinput xinit \
-  xserver-xorg-input-all \
-  && apt-get autoremove -y && \
-  rm -rf /var/lib/apt/lists/*
+COPY --from=stage2 / /
 
-# Extra: full desktop environment
-# not working: kde-plasma-desktop vlc
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    container=docker \
+    L4T_VERSION=32.5.1 \
+    L4T_SOC=t186
+
+# additional desktop packages
 RUN export DEBIAN_FRONTEND=noninteractive; \
-  apt-get update && \
-  apt-get install -y  \
-  -o "Dpkg::Options::=--force-confdef"  \
-  -o "Dpkg::Options::=--force-confold"  \
-  libgles2-mesa-dev libsdl2-dev libblas3 \
-  liblapack3  lightdm \
-  mesa-utils ncurses-term \
-  lxde vlc mplayer \
-  ark gwenview kate kcalc kde-spectacle \
-  khelpcenter knotes okular plasma-dataengines-addons \
-  plasma-pa plasma-runners-addons plasma-widgets-addons \
-  polkit-kde-agent-1 sweeper \
-  chromium-browser \
-  x11vnc xorg \
-  xserver-xorg-input-all \
-  && apt-get autoremove -y && \
-  rm -rf /var/lib/apt/lists/*
+    apt-get update && \
+    apt-get dist-upgrade -y && \
+    apt-get install -y  \
+    -o "Dpkg::Options::=--force-confdef"  \
+    -o "Dpkg::Options::=--force-confold"  \
+    ark \
+    chromium-browser \
+    cups \
+    desktop-base \
+    fonts-ubuntu \
+    gwenview \
+    htop \
+    kate \
+    kcalc \
+    kde-spectacle \
+    lightdm \
+    lightdm-gtk-greeter \
+    locales \
+    lsb-release \
+    lxde \
+    mplayer \
+    nano \
+    ncurses-term \
+    net-tools \
+    okular \
+    openssh-client \
+    rsync \
+    unzip \
+    usbutils \
+    vim \
+    vlc \
+    x11-apps \
+    x11vnc \
+    xorg \
+    xserver-xorg-input-all \
+    wget && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN \
   adduser nvidia \
@@ -186,22 +202,9 @@ RUN \
 
 RUN systemctl set-default graphical.target && \
     systemctl mask tmp.mount && \
+    (systemctl mask NetworkManager || true) && \
     rm /etc/systemd/system/nvwifibt.service && \
-    echo "nvidia	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
-    find /etc/systemd/system \
-         /lib/systemd/system \
-         \( -path '*.wants/*' \
-         -name '*swapon*' \
-         -or -name '*ntpd*' \
-         -or -name '*resolved*' \
-         -or -name '*NetworkManager*' \
-         -or -name '*remount-fs*' \
-         -or -name '*getty*' \
-         -or -name '*systemd-sysctl*' \
-         -or -name '*.mount' \
-         -or -name '*remote-fs*' \) \
-         -exec echo \{} \; \
-         -exec rm \{} \;
+    echo "nvidia	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 WORKDIR /
 ENTRYPOINT ["/lib/systemd/systemd"]
