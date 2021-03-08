@@ -1,0 +1,1 @@
+-march=armv8.2-a+crypto+fp16+rcpc+dotprod
