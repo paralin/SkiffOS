@@ -1,1 +1,0 @@
-source "$BR2_EXTERNAL_CORE_PINEPHONE_UBPORTS_PATH/package/skiff-core-pinephone-ubports/Config.in"

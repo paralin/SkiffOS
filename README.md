@@ -228,7 +228,7 @@ All core configurations work with all target platforms:
 | PinePhone [Manjaro] KDE    | core/pinephone_manjaro_kde    | KDE Variant               |
 | PinePhone [Manjaro] Lomiri | core/pinephone_manjaro_lomiri | Lomiri variant            |
 | PinePhone [Manjaro] Phosh  | core/pinephone_manjaro_phosh  | Phosh variant             |
-| PinePhone [UBPorts]        | core/pinephone_ubports        | Ubuntu-ports (legacy)     |
+| PinePhone [UBTouch]        | core/pinephone_ubtouch        | Ubuntu touch              |
 
 [Gentoo]: https://www.gentoo.org/
 [KDE Neon]: https://neon.kde.org/
@@ -236,7 +236,7 @@ All core configurations work with all target platforms:
 [NASA cFS]: https://github.com/nasa/cFS
 [NASA Fprime]: https://github.com/nasa/fprime
 [NixOS]: https://nixos.org
-[UBPorts]: https://ubports.com/
+[UBTouch]: https://ubuntu-touch.io
 [Ubuntu]: https://ubuntu.com/
 [XFCE]: https://www.xfce.org/
 
