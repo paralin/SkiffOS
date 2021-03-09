@@ -1,1 +1,0 @@
--mfpu=neon-fp-armv8 -ftree-vectorize -fomit-frame-pointer
