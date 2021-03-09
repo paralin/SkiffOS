@@ -1,9 +1,9 @@
 FROM ubuntu:focal as stage1
 
 # setup environment
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
-ENV container docker
+ENV LANG=C.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    container=docker
 
 # Core packages, including ubuntu-desktop-minimal.
 RUN export DEBIAN_FRONTEND=noninteractive; \
@@ -12,7 +12,7 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
   apt-get install -y  \
   --no-install-recommends \
   -o "Dpkg::Options::=--force-confdef"  \
-  -o "Dpkg::Options::=--force-confold"  \
+  -o "Dpkg::Options::=--force-confnew"  \
   autotools-dev \
   build-essential \
   cups \
@@ -56,7 +56,7 @@ ENV container=docker \
 RUN \
   adduser core \
   --no-create-home \
-  --gecos "Core" \
+  --gecos "SkiffOS Core" \
   --shell /bin/bash \
   --disabled-password && \
   adduser core audio && \
@@ -67,6 +67,7 @@ RUN \
   adduser core plugdev && \
   mkdir -p /home/core/ && \
   chown core:core /home/core && \
+  passwd -d core && \
   echo "core    ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN systemctl set-default graphical.target && \
