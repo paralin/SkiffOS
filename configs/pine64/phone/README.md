@@ -18,18 +18,19 @@ References:
 Set the comma-separated `SKIFF_CONFIG` variable:
 
 ```sh
-$ export SKIFF_CONFIG=pine64/phone,core/pinephone_manjaro_kde
+$ export SKIFF_CONFIG=pine64/phone,core/pinephone_ubtouch
 $ make configure                   # configure the system
 $ make compile                     # build the system
 ```
 
-The `core/pinephone_manjaro_kde` portion of SKIFF_CONFIG enables "Skiff Core"
-with Manjaro KDE for PinePhone. See http://manjaro.org for more information.
+The `core/pinephone_ubtouch` portion of SKIFF_CONFIG enables "Skiff Core" with
+[Ubuntu Touch] for PinePhone. See http://ubuntu-touch.io for more information.
 
 Once the build is complete, it's time to flash the system. There are several
 approaches, please see the "Flashing" section in the [common readme].
 
 [common readme]: ../
+[Ubuntu Touch]: https://devices.ubuntu-touch.io/device/pinephone
 
 ## Skiff Core: Available Variants
 
@@ -40,12 +41,25 @@ approaches, please see the "Flashing" section in the [common readme].
 | PinePhone [Manjaro] KDE    | core/pinephone_manjaro_kde    | KDE Variant            |
 | PinePhone [Manjaro] Lomiri | core/pinephone_manjaro_lomiri | Lomiri variant         |
 | PinePhone [Manjaro] Phosh  | core/pinephone_manjaro_phosh  | Phosh variant          |
-| PinePhone [UBPorts]        | core/pinephone_ubports        | Ubuntu-ports (legacy)  |
+| PinePhone [UBTouch]        | core/pinephone_ubtouch        | Ubuntu Touch           |
 
 
 [KDE Neon]: https://neon.kde.org/
 [Manjaro]: https://manjaro.org/
-[UBPorts]: https://ubports.com/
+[UBPorts]: https://ubuntu-touch.io/
+
+## Using Jumpdrive
+
+Flashing using the micro "Jumpdrive" image is useful for recovery:
+
+ 1. Download the [Jumpdrive image]. 2. Flash&boot to a SD card: `xzcat jumpdrive.xz | dd of=/dev/sdx`
+ 3. Connect to PC over USB.
+ 4. The internal EMMC will appear as a new disk.
+
+The disk now exists at, for example, `/dev/sdc`. Use the [flashing](../)
+commands to flash SkiffOS to the EMMC.
+
+[Jumpdrive image]: https://github.com/dremurrs-embedded/Jumpdrive/releases
 
 ## Upgrading Modem Firmware
 
@@ -61,3 +75,4 @@ Reference:
  - https://git.sr.ht/~martijnbraam/pinephone-modemfw/
 
 [PinePhone Firmware Wiki]: https://wiki.pine64.org/wiki/PineModems#Firmware_Recovery
+
