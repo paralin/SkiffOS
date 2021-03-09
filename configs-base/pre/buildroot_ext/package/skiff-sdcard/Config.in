@@ -1,0 +1,37 @@
+config BR2_PACKAGE_SKIFF_SDCARD
+	bool "skiff-sdcard"
+	help
+	  Standard boot media format/install scripts.
+
+if BR2_PACKAGE_SKIFF_SDCARD
+
+config BR2_PACKAGE_SKIFF_SDCARD_SINGLE_PARTITION
+	bool "use a single persist partition"
+	help
+	  TODO use a single persist partition.
+	
+	  Most configs also set PERSIST_LABEL.
+	  mounts rbind /boot as /mnt/boot and
+	  / to /mnt/persist.
+
+config BR2_PACKAGE_SKIFF_SDCARD_BOOT_LABEL
+	string "label of boot partition"
+	default "boot"
+	help
+	  the label of the boot partition to use.
+
+config BR2_PACKAGE_SKIFF_SDCARD_ROOTFS_LABEL
+	string "label of rootfs (resources) partition"
+	default "rootfs"
+	help
+	  the label of the rootfs partition to use.
+		
+	  contains modules.squashfs and other resources.
+
+config BR2_PACKAGE_SKIFF_SDCARD_PERSIST_LABEL
+	string "label of persist partition"
+	default "persist"
+	help
+	  the label of the persist partition to use.
+
+endif # BR2_PACKAGE_SKIFF_SDCARD
