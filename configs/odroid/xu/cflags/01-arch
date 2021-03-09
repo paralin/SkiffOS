@@ -1,1 +1,1 @@
--march=armv7ve+simd -mtune=cortex-a15.cortex-a7 -mfpu=neon-vfpv4
+-march=armv7ve+simd -mtune=cortex-a15.cortex-a7
