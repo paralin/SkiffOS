@@ -60,10 +60,6 @@ dtparam=audio=on
 dtoverlay=vc4-fkms-v3d
 max_framebuffers=2
 
-# see issue #1431 on raspberrypi/firmware
-# issue with hang with mmc_rescan with schedutil
-arm_freq_min=700
-
 [all]
 enable_uart=1
 disable_overscan=1

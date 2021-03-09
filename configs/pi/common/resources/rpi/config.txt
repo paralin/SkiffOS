@@ -10,6 +10,11 @@
 kernel=zImage
 initramfs rootfs.cpio.gz
 
+# We always use the same names, the real used variant is selected by
+# BR2_PACKAGE_RPI_FIRMWARE_{DEFAULT,X,CD} choice
+start_file=start.elf
+fixup_file=fixup.dat
+
 # Enable GPIO features
 dtparam=i2c_arm=on
 dtparam=spi=on
@@ -50,14 +55,17 @@ dtparam=audio=on
 # Forces CPU to run in turbo for initial seconds
 # initial_turbo=45
 
+[pi4]
+# dtoverlay=vc4-kms-v3d-pi4
+dtoverlay=vc4-fkms-v3d
+max_framebuffers=2
+
 [all]
 enable_uart=1
 disable_overscan=1
 hdmi_drive=2
 gpu_mem=128
 
-
 # skiff extension files (todo)
 # include skiff-boardcfg.txt
 # include skiff-usercfg.txt
-
