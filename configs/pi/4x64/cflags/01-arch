@@ -1,2 +1,4 @@
 # no ARMv8 crypto extensions
--march=armv8-a+crc+simd -Wa,-march=armv8-a+crc+simd
+-march=armv8-a+crc -mtune=cortex-a72
+# use more registers
+-ftree-vectorize -fomit-frame-pointer

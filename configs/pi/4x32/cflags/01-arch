@@ -1,0 +1,2 @@
+# use more registers
+-ftree-vectorize -fomit-frame-pointer
