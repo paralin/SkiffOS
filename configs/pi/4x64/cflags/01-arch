@@ -1,1 +1,2 @@
--march=armv8-a+crc+simd
+# no ARMv8 crypto extensions
+-march=armv8-a+crc+simd -Wa,-march=armv8-a+crc+simd
