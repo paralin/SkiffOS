@@ -1,1 +1,0 @@
--mtune=cortex-a53 -mfpu=neon-fp-armv8
