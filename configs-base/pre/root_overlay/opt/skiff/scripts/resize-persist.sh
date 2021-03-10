@@ -20,6 +20,12 @@ fi
 if [ -z "$PERSIST_DEV" ]; then
     PERSIST_DEV=/dev/disk/by-label/persist
 fi
+# HACK: better would be a systemd pre-condition.
+# this script is in boot-up critical path, which makes things complicated.
+if [ ! -b "$PERSIST_DEV" ]; then
+    echo "Cannot find persist device, will retry in a moment..."
+    sleep 2
+fi
 if [ ! -b "$PERSIST_DEV" ]; then
     echo "Cannot find persist device, skipping check."
     echo "PERSIST_DEVICE=${PERSIST_DEVICE}"
