@@ -16,12 +16,14 @@ app-office/libreoffice ~ARCH
 app-office/libreoffice-l10n ~ARCH
 app-portage/portage-bashrc-mv ~ARCH
 app-shells/runtitle ~ARCH
+app-shells/zsh-completions ~ARCH
 app-text/pandoc ~ARCH
 dev-java/openjdk-bin ~ARCH
 dev-lang/go ~ARCH
 dev-lang/rust ~ARCH
 dev-lang/spidermonkey ~ARCH
 dev-libs/icu ~ARCH
+dev-libs/libconfig ~ARCH
 dev-libs/libffi-compat ~ARCH
 dev-libs/nss ~ARCH
 dev-util/gn ~ARCH
@@ -61,7 +63,9 @@ net-wireless/inspectrum ~ARCH
 net-wireless/ubertooth ~ARCH
 sys-apps/baselayout-java ~ARCH
 sys-apps/qdirstat ~ARCH
+sys-auth/nss-mdns ~ARCH
 sys-auth/pam_mount ~ARCH
+sys-block/ms-sys ~ARCH
 sys-block/partitionmanager ~ARCH
 sys-config/ltoize ~ARCH
 sys-devel/binutils ~ARCH
