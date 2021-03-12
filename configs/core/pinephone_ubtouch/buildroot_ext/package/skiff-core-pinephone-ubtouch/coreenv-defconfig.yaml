@@ -33,14 +33,14 @@ containers:
 users:
   core:
     container: core
-    containerUser: phablet
+    containerUser: root
     containerShell:
       - "/bin/bash"
     auth:
       copyRootKeys: true
   phablet:
     container: core
-    containerUser: phablet
+    containerUser: root
     containerShell:
       - "/bin/bash"
     auth:
