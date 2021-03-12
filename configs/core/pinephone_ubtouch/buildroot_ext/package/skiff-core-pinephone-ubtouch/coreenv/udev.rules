@@ -1,0 +1,2 @@
+# no automount mmcblk disks
+KERNEL=="mmcblk*", ENV{UDISKS_IGNORE}="1"

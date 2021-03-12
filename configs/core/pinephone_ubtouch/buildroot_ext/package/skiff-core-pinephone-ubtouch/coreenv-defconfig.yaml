@@ -15,7 +15,7 @@ containers:
       - /lib/modules:/lib/modules:ro
       - /mnt:/mnt
       - /run/udev:/run/udev
-      - /mnt/persist/skiff/ubtouch-userdata:/userdata
+      - /mnt/persist/ubtouch/userdata:/userdata
       - /mnt/persist/skiff/core/repos/tmp:/var/tmp
     privileged: true
     startAfterCreate: true
@@ -33,7 +33,14 @@ containers:
 users:
   core:
     container: core
-    containerUser: core
+    containerUser: phablet
+    containerShell:
+      - "/bin/bash"
+    auth:
+      copyRootKeys: true
+  phablet:
+    container: core
+    containerUser: phablet
     containerShell:
       - "/bin/bash"
     auth:
