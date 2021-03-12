@@ -14,16 +14,28 @@ Then, mount it as a loop-back device, and build the docker image:
 
 ```sh
   xz -d ./ubuntu-touch-pinephone.img.xz
-  losetup -o 2840000512 /dev/loop2 ./ubuntu-touch-pinephone.img
   mkdir mtpt
-  # mount /dev/loop2p9 ./mtpt
-  mount /dev/loop2 ./mtpt
+  losetup -P /dev/loop2 ./ubuntu-touch-pinephone.img
+  mount /dev/loop2p9 ./mtpt
   cd mtpt
   tar -c . | docker import - skiffos/pinephone-ubtouch-base:latest
   cd ..
   umount mtpt
+  mount /dev/loop2p10 ./mtpt
+  rsync -rav ./mtpt/ ./userdata/
+  umount ./mtpt
+  
   losetup -d /dev/loop2
+  
+  # alternatively, if partitions are not detected:
+  # fdisk -l ./ubuntu-touch-pinephone.img
+  # multiply partition start by 512
+  # losetup -o 2840000512 /dev/loop2 ./ubuntu-touch-pinephone.img
+  # mount /dev/loop2 ./mtpt
 ```
+
+The contents of userdata/ and android/ are expected to be in the working
+directory when running `docker build` below.
 
 Next, build `skiffos/skiff-core-pinephone-ubtouch:latest`:
 
