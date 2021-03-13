@@ -70,13 +70,6 @@ rootfs_size=2048
 echo "creating signed images"
 
 bootloader_dir=${l4t_dir}/bootloader
-if [ ! -f "${bootloader_dir}/flashcmd.txt" ]; then
-		echo "ERROR: ${bootloader_dir}/flashcmd.txt not found"
-		exit 1
-fi
-
-chipid=$(sed -nr 's/.*chip ([^ ]*).*/\1/p' "${bootloader_dir}/flashcmd.txt")
-signed_cfg="flash.xml"
 
 pushd ${l4t_dir}
 export BOARDID="${boardid}"
@@ -86,21 +79,14 @@ ${l4t_dir}/flash.sh \
             --no-flash \
             --sign \
             --no-systemimg \
-            -x ${chipid} \
-            -B ${boardid} \
-            -S "${rootfs_size}MiB" \
             -I $IMAGES_DIR/rootfs.ext2 \
             -K $IMAGES_DIR/u-boot-dtb.bin \
             -d $IMAGES_DIR/tegra210-p3448-0000-p3449-0000-b00.dtb \
             "${target}" "mmcblk0p1"
 popd
 
+signed_cfg="flash.xml"
 signed_image_dir=${bootloader_dir}/signed
-if [ ! -d "${signed_image_dir}" ]; then
-		echo "ERROR: ${signed_image_dir} not found"
-		exit 1
-fi
-
 if [ ! -f "${signed_image_dir}/${signed_cfg}" ]; then
 		echo "ERROR: ${signed_image_dir}/${signed_cfg} not found"
 		exit 1
