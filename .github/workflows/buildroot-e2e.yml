@@ -38,17 +38,17 @@ jobs:
           export BR2_CCACHE_DIR=${HOME}/br-cache/ccache
           export BR2_DL_DIR=${HOME}/br-cache/dl
           export SKIFF_WORKSPACE=docker
-          export SKIFF_CONFIG=virt/docker,skiff/core,core/nixos
+          export SKIFF_CONFIG=virt/docker,skiff/core
           make -s configure compile check
           echo "Compilation complete, building Docker image..."
           make cmd/virt/docker/buildimage
           sleep 2 # docker sometimes does not tag right away
           mkdir -p workflow-artifacts
-          docker save paralin/skiffos:latest | gzip -9 > ./workflow-artifacts/docker-image.tar.gz
+          docker save skiffos/skiffos:latest > ./workflow-artifacts/docker-image.tar
 
       # Upload docker image
       - uses: actions/upload-artifact@v2
         with:	
-          name: docker-image.tar.gz
-          path: ${{ github.workspace }}/workflow-artifacts/docker-image.tar.gz
+          name: docker-image.tar
+          path: ${{ github.workspace }}/workflow-artifacts/docker-image.tar
 
