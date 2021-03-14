@@ -379,6 +379,19 @@ $ make cmd/virt/docker/exec
 $ docker exec -it skiff sh
 ```
 
+Alternatively, run the latest demo release on Docker Hub:
+
+```
+docker run -t -d --name=skiff \
+  --privileged \
+  --cap-add=NET_ADMIN \
+  --security-opt seccomp=unconfined \
+  --stop-signal=SIGRTMIN+3 \
+  -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+  -v $(pwd)/skiff-persist:/mnt/persist \
+  skiffos/skiffos:latest
+```
+
 ## Configuration
 
 SkiffOS includes a systemd-based configuration and a standard partition layout,

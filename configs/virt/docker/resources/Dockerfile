@@ -2,11 +2,10 @@ FROM scratch
 
 ADD rootfs.tar /
 
-ENV container docker
-ENV init /lib/systemd/systemd
-ENV LC_ALL C
+ENV container=docker \
+    init=/lib/systemd/systemd \
+    LC_ALL=C
 
-USER root
 RUN find /etc/systemd/system \
          /usr/lib/systemd/system \
          \( -path '*.wants/*' \
@@ -30,5 +29,5 @@ RUN systemctl set-default multi-user.target && \
     touch /etc/skip-skiff-mounts && \
     touch /etc/skip-skiff-journal-mounts
 
-VOLUME [ "/sys/fs/cgroup", "/mnt/persist", "/mnt/rootfs" ]
+VOLUME [ "/mnt/persist", "/mnt/rootfs" ]
 ENTRYPOINT ["/usr/lib/systemd/systemd"]
