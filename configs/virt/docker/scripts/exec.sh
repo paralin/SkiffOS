@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker exec -it skiff sh
+exec docker exec -it skiff bash

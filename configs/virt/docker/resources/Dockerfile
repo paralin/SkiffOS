@@ -29,5 +29,7 @@ RUN systemctl set-default multi-user.target && \
     touch /etc/skip-skiff-mounts && \
     touch /etc/skip-skiff-journal-mounts
 
+RUN echo '. /etc/profile' >> /root/.bashrc
+
 VOLUME [ "/mnt/persist", "/mnt/rootfs" ]
 ENTRYPOINT ["/usr/lib/systemd/systemd"]
