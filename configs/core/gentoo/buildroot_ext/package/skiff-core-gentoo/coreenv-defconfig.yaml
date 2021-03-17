@@ -11,7 +11,7 @@ containers:
     # systemd: indicate this is a container
     env: ["container=docker"]
     stopSignal: RTMIN+3
-    tty: true
+    tty: false
     disableInit: true
     workingDirectory: /
     mounts:
