@@ -13,18 +13,18 @@ jobs:
         skiffconf:
         - apple-macbook
         - odroid-c4
-        - odroid-u
         - odroid-xu
         - pi-0
         - pi-3
         - pi-4
         - pine64-book
         - pine64-phone
-        - virt-wsl
-        # exceeds the storage limit
+        # exceeds the storage/time limit
         # - pine64-h64
         # - jetson-nano
         # - jetson-tx2
+        # - odroid-u
+        # - virt-wsl
     steps:
       - uses: actions/checkout@v2
       - name: Cache build cache and downloads

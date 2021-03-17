@@ -38,7 +38,7 @@ jobs:
           export BR2_CCACHE_DIR=${HOME}/br-cache/ccache
           export BR2_DL_DIR=${HOME}/br-cache/dl
           export SKIFF_WORKSPACE=docker
-          export SKIFF_CONFIG=virt/docker,skiff/core
+          export SKIFF_CONFIG=virt/docker,core/gentoo
           make -s configure compile check
           echo "Compilation complete, building Docker image..."
           make cmd/virt/docker/buildimage
