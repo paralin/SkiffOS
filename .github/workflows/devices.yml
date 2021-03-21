@@ -37,17 +37,17 @@ jobs:
       - name: Clear caches if necessary
         run: |
           # necessary to save space
-          if [ ! -f ~/br-cache/ccache-v3 ]; then
+          if [ ! -f ~/br-cache/ccache-v4 ]; then
             echo "Clearing old compiler cache..."
             rm -rf ~/br-cache/ccache* || true
             mkdir -p ~/br-cache/ccache
-            touch ~/br-cache/ccache-v3
+            touch ~/br-cache/ccache-v4
           fi
-          if [ ! -f ~/br-cache/dl-v3 ]; then
+          if [ ! -f ~/br-cache/dl-v4 ]; then
             echo "Clearing old downloads cache..."
             rm -rf ~/br-cache/dl* || true
             mkdir -p ~/br-cache/dl
-            touch ~/br-cache/dl-v3
+            touch ~/br-cache/dl-v4
           fi
       - name: Install buildroot apt deps
         run: |
