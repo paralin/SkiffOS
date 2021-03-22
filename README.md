@@ -31,6 +31,8 @@ needed to support the hardware, cleanly separated from the applications.
 
 ## Getting started
 
+[![Support Server](https://img.shields.io/discord/803825858599059487.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/EKVkdVmvwT)
+
 The `SKIFF_CONFIG` comma-separated environment variable selects which
 configuration layers should be merged together to configure the build.
 
@@ -434,8 +436,6 @@ You can [build Skiff inside Docker](./build/docker) if you encounter any
 incompatibility with your build host operating system.
 
 ## Support
-
-[![Support Server](https://img.shields.io/discord/803825858599059487.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/EKVkdVmvwT)
 
 If you encounter issues or questions at any point when using Skiff, please file
 a [GitHub issue](https://github.com/skiffos/SkiffOS/issues/new) and/or [Join
