@@ -28,13 +28,13 @@ jobs:
         # - virt-wsl
     steps:
       - uses: actions/checkout@v2
-      - name: Cache build cache and downloads
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-buildroot-device
-        with:
-          path: ~/br-cache/
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.skiffconf }}
+      #- name: Cache build cache and downloads
+      #  uses: actions/cache@v2
+      #  env:
+      #    cache-name: cache-buildroot-device
+      #  with:
+      #    path: ~/br-cache/
+      #    key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.skiffconf }}
       - name: Clear caches if necessary
         run: |
           # necessary to save space
@@ -50,9 +50,6 @@ jobs:
             mkdir -p ~/br-cache/dl
             touch ~/br-cache/dl-v4
           fi
-      - name: Install buildroot apt deps
-        run: |
-          sudo apt-get install -y libelf-dev
       - name: Print help and packages list
         run: |
           cd $GITHUB_WORKSPACE
