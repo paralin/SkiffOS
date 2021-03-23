@@ -34,7 +34,8 @@ fi
 PERSIST_DEV=$(readlink -f $PERSIST_DEV)
 
 echo "Found persist partition at ${PERSIST_DEV}, performing filesystem check if necessary..."
-FSCKFIX=yes fsck -y $PERSIST_DEV
+FSCKFIX=yes fsck -y $PERSIST_DEV || true
+FSCKFIX=yes e2fsck -y -f $PERSIST_DEV || true
 
 PARTNAME=$(basename $PERSIST_DEV)
 PARTLINE=$(cat /proc/partitions | grep $PARTNAME)
