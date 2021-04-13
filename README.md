@@ -131,11 +131,11 @@ Here are the boards/systems currently supported:
 | [OrangePi Zero]      | orangepi/zero      | ✔ U-Boot 2018.07     | ✔ 5.11.18       |                        |
 | [PcDuino 3]          | pcduino/3          | ✔ U-Boot 2019.07     | ✔ 5.11.18       |                        |
 | [PcEngines APU2]     | pcengines/apu2     | ✔ CoreBoot           | ✔ 5.11.18       |                        |
-| [Pi 0]               | [pi/0]             | N/A                  | ✔ rpi-5.11.17   | ✔ Tested               |
-| [Pi 1]               | [pi/1]             | N/A                  | ✔ rpi-5.11.17   |                        |
-| [Pi 3] + 1, 2        | [pi/3]             | N/A                  | ✔ rpi-5.11.17   | ✔ Tested               |
-| [Pi 4]               | [pi/4]             | N/A                  | ✔ rpi-5.11.17   | ✔ Tested               |
-| [Pi 4] (32bit mode)  | [pi/4x32]          | N/A                  | ✔ rpi-5.11.17   | ✔ Tested               |
+| [Pi 0]               | [pi/0]             | N/A                  | ✔ rpi-5.12      | ✔ Tested               |
+| [Pi 1]               | [pi/1]             | N/A                  | ✔ rpi-5.12      |                        |
+| [Pi 3] + 1, 2        | [pi/3]             | N/A                  | ✔ rpi-5.12      | ✔ Tested               |
+| [Pi 4]               | [pi/4]             | N/A                  | ✔ rpi-5.12      | ✔ Tested               |
+| [Pi 4] (32bit mode)  | [pi/4x32]          | N/A                  | ✔ rpi-5.12      | ✔ Tested               |
 | [Pine64] H64         | pine64/h64         | ✔ U-Boot             | ✔ pine64-5.8.0  | ✔ Tested               |
 | [PineBook Pro]       | [pine64/book]      | ✔ U-Boot (bin)       | ✔ ayufan-5.9.0  | ✔ Tested               |
 | [PinePhone]          | [pine64/phone]     | ✔ U-Boot             | ✔ megi-5.12     | ✔ Tested               |
